@@ -20,6 +20,12 @@ In the project directory and use the following command to install the dependent 
 $ pip3 install toml yaml
 ```
 
+Or use the `requirement` parameter of the PIP to install the dependency library
+
+```
+$ pip3 install -r requirements.txt
+```
+
 ### Basic usage
 
 Use the `-t` parameter to search directly on the target path.
@@ -28,7 +34,7 @@ Use the `-t` parameter to search directly on the target path.
 
 When you want to exclude some types of files, you can use the `-e` parameter to exclude the specified files. Note that regular expressions are used here to match file names, for example, the program may search for the following file /tmp/aaa.so, if you do not want to search for the `.so` file type, you can use the regular expression `. *so` The program will match the `aaa.so` string with the regular expression `. *so` to filter `so` format files.
 
-```python3 sensitive-helper.py -t <Your search file path> -e "*.so" "*.gz"```
+```python3 sensitive-helper.py -t <Your search file path> -e ".*so" ".*gz"```
 
 If you think the search is too slow, you can use the `-p` parameter to adjust the number of processes to search (default: 8) to increase the search speed, although Python's multiprocessing sucks, it's better than nothing!
 

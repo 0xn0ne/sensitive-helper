@@ -22,32 +22,38 @@
 $ pip3 install toml yaml
 ```
 
+或者使用 PIP 的 `requirement` 参数安装依赖库
+
+```
+$ pip3 install -r requirements.txt
+```
+
 ### 基础用法
 
 使用 `-t` 参数直接对目标路径进行搜索
 
-```python3 sensitive-helper.py -t <你的搜索文件路径>```
+```$ python3 sensitive-helper.py -t <你的搜索文件路径>```
 
 当想要排除部分类型文件，可以使用 `-e` 参数排除指定的文件，要注意这里是使用正则表达式进行文件名匹配的，比如程序可能搜索到以下文件 /tmp/aaa.so，如果不想搜索 `.so` 文件类型，可以使用正则表达式 `.*so` 程序会将 `aaa.so` 字符串与正则表达式进行匹配 `.*so`，即可对 `so` 格式文件进行过滤
 
-```python3 sensitive-helper.py -t <你的搜索文件路径> -e "*.so" "*.gz"```
+```$ python3 sensitive-helper.py -t <你的搜索文件路径> -e ".*so" ".*gz"```
 
 如果觉得搜索速度太慢，可以使用 `-p` 参数调整搜索的进程数（默认为：8）以提高搜索速度，虽然Python 的多进程很差劲，但有总比没有好
 
-```python3 sensitive-helper.py -t <你的搜索文件路径> -p 20```
+```$ python3 sensitive-helper.py -t <你的搜索文件路径> -p 20```
 
 有保存数据的需求话，可以使用 `-o` 参数输出 json 格式的结果文件
 
-```python3 sensitive-helper.py -t <你的搜索文件路径> -o results.json```
+```$ python3 sensitive-helper.py -t <你的搜索文件路径> -o results.json```
 
 默认情况下，程序使用正则表达式进行匹配的时候，匹配到 1 条表达式就会退出当前文件的搜索。可以使用 `-a` 参数，强制程序将每条正则表达式都匹配完毕，挖掘更多可能有用的数据
 
-```python3 sensitive-helper.py -t <你的搜索文件路径> -a```
+```$ python3 sensitive-helper.py -t <你的搜索文件路径> -a```
 
 ### 使用说明
 
 ```
-% python3 sensitive-helper.py -h                                                    
+$ python3 sensitive-helper.py -h                                                    
 usage: sensitive-helper.py [-h] -t TARGET_PATH [-p PROCESS_NUMBER] [-c CONFIG] [-o OUTPUT] [-e EXCLUDE_FILES [EXCLUDE_FILES ...]] [-a]
 
 ███████╗███████╗███╗   ██╗███████╗██╗████████╗██╗██╗   ██╗███████╗
@@ -78,7 +84,7 @@ optional arguments:
 # 结果样例
 
 ```
-% python3 sensitive-helper.py -t /dex_decompile -a
+$ python3 sensitive-helper.py -t /dex_decompile -a
 [+] {'file': '/dex_decompile/10239423_dexfile_repair/s/h.java', 'group': regexp': '(ftp|https?):\\/\\/[\\w\\-_]+(\\.[\\w\\-_]+)+([\\w\\-\\.,@?^=%&amp;:/~\\+#]*[\\w\\-\\@?^=%&amp;/~\\+#])?', 'match': 'http://www.example.com/hello', 'extend': ''}
 [+] {'file': '/dex_decompile/10211981_dexfile_repair/auth/auth.java': 'BASE64', 'regexp': '[0-9a-zA-Z/+-]{6,}={,2}', 'match': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9', 'extend': '{"alg":"HS256","typ":"JWT"}'}
 [+] {'file': '/dex_decompile/10239423_dexfile_repair/s/bg.java', 'group':MATCH', 'regexp': 'PASS.{,20}[=:(]\\s*.{,128}', 'match': 'PassedByPoints());', 'extend': ''}
