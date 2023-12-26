@@ -1,0 +1,25 @@
+exclude-files:
+- \.DS_Store
+is-re-all-group: true
+output-path: ./
+process-number: 20
+re-groups:
+  ALI AKSK:
+  - LTAI\w+
+  BASE64:
+  - '[0-9a-zA-Z/+-]{6,}={,2}'
+  FUZZY MATCH:
+    flags: I|X
+    regexp:
+    - SECRET.{,20}[=:(]\s*.{,128}
+    - APP[-_]?KEY.{,20}[=:(]\s*.{,128}
+    - ACCESS[-_]?KEY.{,20}[=:(]\s*.{,128}
+    - USER.{,20}[=:(]\s*.{,128}
+    - PASS.{,20}[=:(]\s*.{,128}
+    - USR.{,20}[=:(]\s*.{,128}
+    - PWD.{,20}[=:(]\s*.{,128}
+  JWT:
+  - ey[\w/+-]*={,2}(\.[\w/+-]*={,2}){2}
+  URL:
+  - (ftp|https?):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?
+target-path: ''
