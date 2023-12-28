@@ -8,7 +8,7 @@
 
 基于正则表达式的本地文件敏感信息数据挖掘助手。如果要搜索网页上的敏感数据，可以把敏感数据导出到本地再进行搜索。优化了一下多线程的使用，优化了配置的使用方式。
 
-**注意**：如果默认规则不满足您的匹配需求，请自行调整 configs.yaml 文件中的 `re_groups` 部分内容进行匹配
+**注意**：如果默认规则不满足您的匹配需求，请自行调整 configs.yaml 文件中的 `rules` 部分内容进行匹配
 
 # 快速开始
 
@@ -19,7 +19,7 @@
 进入项目目录，使用以下命令安装依赖库
 
 ```
-$ pip3 install toml yaml
+$ pip3 install toml yaml tqdm pandas
 ```
 
 或者使用 PIP 的 `requirement` 参数安装依赖库
@@ -38,9 +38,10 @@ $ pip3 install -r requirements.txt
 
 ```$ python3 sensitive-helper.py -t <你的搜索文件路径> -e ".*so" ".*gz"```
 
-如果觉得搜索速度太慢，可以使用 `-p` 参数调整搜索的进程数（默认为：8）以提高搜索速度，虽然Python 的多进程很差劲，但有总比没有好
+如果觉得搜索速度太慢，可以使用 `-p` 参数调整搜索的进程数（默认为：5）以提高搜索速度，虽然Python 的多进程很差劲，但有总比没有好
+**注意**：计算机性能不好设置不要超过20个进程数，程序涉及大量的IO、内存操作，计算机可能会崩溃，比如我的电脑。
 
-```$ python3 sensitive-helper.py -t <你的搜索文件路径> -p 20```
+```$ python3 sensitive-helper.py -t <你的搜索文件路径> -p 10```
 
 有保存数据的需求话，可以使用 `-o` 参数输出 json 格式的结果文件
 
@@ -50,46 +51,63 @@ $ pip3 install -r requirements.txt
 
 ```$ python3 sensitive-helper.py -t <你的搜索文件路径> -a```
 
+**注意**：程序内置默认匹配规则，规则优先级为：默认配置 < configs.yaml 配置 < 用户输入配置
+
 ### 使用说明
 
 ```
-$ python3 sensitive-helper.py -h                                                    
-usage: sensitive-helper.py [-h] -t TARGET_PATH [-p PROCESS_NUMBER] [-c CONFIG] [-o OUTPUT] [-e EXCLUDE_FILES [EXCLUDE_FILES ...]] [-a]
+$ python3 sensitive-helper.py -h                                  
+usage: sensitive-helper.py [-h] -t TARGET_PATH [-p PROCESS_NUMBER] [-c CONFIG_PATH] [-o OUTPUT_FORMAT] [-e EXCLUDE_FILES [EXCLUDE_FILES ...]] [-a] [-s]
 
 ███████╗███████╗███╗   ██╗███████╗██╗████████╗██╗██╗   ██╗███████╗
 ██╔════╝██╔════╝████╗  ██║██╔════╝██║╚══██╔══╝██║██║   ██║██╔════╝
-███████╗█████╗  ██╔██╗ ██║███████╗██║   ██║   ██║██║   ██║█████╗  
-╚════██║██╔══╝  ██║╚██╗██║╚════██║██║   ██║   ██║╚██╗ ██╔╝██╔══╝  
+███████╗█████╗  ██╔██╗ ██║███████╗██║   ██║   ██║██║   ██║█████╗
+╚════██║██╔══╝  ██║╚██╗██║╚════██║██║   ██║   ██║╚██╗ ██╔╝██╔══╝
 ███████║███████╗██║ ╚████║███████║██║   ██║   ██║ ╚████╔╝ ███████╗
 ╚══════╝╚══════╝╚═╝  ╚═══╝╚══════╝╚═╝   ╚═╝   ╚═╝  ╚═══╝  ╚══════╝
-    v0.1.1
+    v0.1.2
     by 0xn0ne, https://github.com/0xn0ne/sensitive-helper
 
-optional arguments:
-  -h, --help            show this help message and exit
+options:
+  -h, --help            显示帮助信息并退出程序
   -t TARGET_PATH, --target-path TARGET_PATH
-                        search for file paths or folder paths for sensitive data(eg. ~/download/folder).
+                        搜索敏感信息的文件路径或文件夹路径（例如：~/download/folder）
   -p PROCESS_NUMBER, --process-number PROCESS_NUMBER
-                        number of program processes(default number 8).
-  -c CONFIG, --config CONFIG
-                        path to the yaml configuration file(default configs.yaml).
-  -o OUTPUT, --output OUTPUT
-                        path to json output(default without output).
+                        程序进程数（默认值：5）
+  -c CONFIG_PATH, --config-path CONFIG_PATH
+                        yaml 配置文件的路径（默认值：configs.yaml）
+  -o OUTPUT_FORMAT, --output-format OUTPUT_FORMAT
+                        输出文件格式，可用格式为 json、csv（默认值：csv）
   -e EXCLUDE_FILES [EXCLUDE_FILES ...], --exclude-files EXCLUDE_FILES [EXCLUDE_FILES ...]
-                        excluded files, using regular matching(eg. \.DS_Store .*bin .*doc).
-  -a, --is-re-all-group
-                        hit a single regular expression per file or match all regular expressions to exit the match loop.
+                        排除的文件，使用正则匹配（例如：\.DS_Store .*bin .*doc）
+  -a, --is-re-all       每个文件的被单个正则表达式规则后退出匹配循环，或匹配所有正则表达式才退出匹配循环
+  -s, --is-silent       静默模式：开启后，命令行不会输出命中的信息，会使用进度条来显示进度
 ```
 
-# 结果样例
+### 默认模式输出样例
 
 ```
-$ python3 sensitive-helper.py -t /dex_decompile -a
-[+] {'file': '/dex_decompile/10239423_dexfile_repair/s/h.java', 'group': regexp': '(ftp|https?):\\/\\/[\\w\\-_]+(\\.[\\w\\-_]+)+([\\w\\-\\.,@?^=%&amp;:/~\\+#]*[\\w\\-\\@?^=%&amp;/~\\+#])?', 'match': 'http://www.example.com/hello', 'extend': ''}
-[+] {'file': '/dex_decompile/10211981_dexfile_repair/auth/auth.java': 'BASE64', 'regexp': '[0-9a-zA-Z/+-]{6,}={,2}', 'match': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9', 'extend': '{"alg":"HS256","typ":"JWT"}'}
-[+] {'file': '/dex_decompile/10239423_dexfile_repair/s/bg.java', 'group':MATCH', 'regexp': 'PASS.{,20}[=:(]\\s*.{,128}', 'match': 'PassedByPoints());', 'extend': ''}
-total file number: 68920
-total time(s): 112.49523591995239
+$ python3 sensitive-helper.py -t "cache/" -a
+[*] file loading...
+[*] analyzing...
+
+[+] group: FUZZY MATCH, match: AppId":"123456", file: cache/heapdump
+[+] group: BASE64, match: ZjY2MTQyNDEtYTIyYS00YjNlLTg1NTgtOTQ4NmUwZDFkZjM1, file: cache/heapdump
+[+] group: FUZZY MATCH, match: password":"123456", file: cache/heapdump
+[+] group: FILE PATH, match: C:\Windows\system32\drivers, file: cache/heapdump-BAK
+[+] group: URL, match: http://hello.world/123456.jpg, file: cache/heapdump-BAK  
+total file number: 5
+```
+
+### 静默模式输出样例
+
+```
+$ python3 sensitive-helper.py -t "cache/" -a -s
+[*] file loading...
+[*] analyzing...
+
+53792/53792 [██████████████████████████████████████████] 00:28<00:00,1856.73it/s
+total file number: 53792
 ```
 
 # Q&A

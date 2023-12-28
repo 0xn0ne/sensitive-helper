@@ -160,5 +160,8 @@ cython_debug/
 .idea/
 
 # other
+*.csv
 *.json
 .DS_Store
+.cache/
+cache/

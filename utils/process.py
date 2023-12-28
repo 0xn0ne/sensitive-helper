@@ -8,7 +8,7 @@ import concurrent.futures
 import os
 import random
 import time
-from typing import List
+from typing import List, Generator, Any
 
 
 class ProcessPoolHelper(concurrent.futures.ProcessPoolExecutor):
@@ -18,10 +18,10 @@ class ProcessPoolHelper(concurrent.futures.ProcessPoolExecutor):
 
     def submit_super(self, fn, /, *args, **kwargs) -> concurrent.futures.Future:
         job = self.submit(fn, *args, **kwargs)
-        self.__job_list.append(self.submit(fn, *args, **kwargs))
+        self.__job_list.append(job)
         return job
 
-    def result_yield(self):
+    def result_yield(self) -> Generator[Any, None, None]:
         self.__job_list.reverse()
         while self.__job_list:
             yield self.__job_list.pop().result()
@@ -55,8 +55,6 @@ if __name__ == '__main__':
     start_time = time.time()
     print('return:', __test_return_func(500, 550))
     print('run one times, total time(s):', time.time() - start_time)
-    # return: 2767812253541680
-    # run one times, total time(s): 14.243044137954712
 
     thr = ProcessPoolHelper(3)
 
@@ -64,12 +62,8 @@ if __name__ == '__main__':
     [thr.submit_super(__test_return_func, 500, 550) for i in range(10)]
     print('return:', [i for i in thr.result_yield()])
     print('total time(s):', time.time() - start_time)
-    # return: [2442419579781879, 2662417582384009, 2403259794556660, 2649232459409636, 2624683570539196, 2383612220511565, 2840374377652650, 2529222514649007, 2671657995382567, 2662924372764240]
-    # total time(s): 108.07601523399353
 
     start_time = time.time()
     [thr.submit_super(__test_performance_func, 500, 550) for i in range(10)]
     print('return:', [i for i in thr.result_yield()])
     print('total time(s):', time.time() - start_time)
-    # return: [None, None, None, None, None, None, None, None, None, None]
-    # total time(s): 103.11356687545776
