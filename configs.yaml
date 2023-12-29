@@ -4,88 +4,34 @@ exclude_files:
 is_re_all: false
 is_silent: false
 output_format: csv
-process_number: 20
+process_number: 5
 row_split: "[\0-\x1F\x7F]+"
 rules:
   AKSK:
   - LTAI\w+
   BASE64:
   - '[0-9a-zA-Z/+]{8,}={,2}'
+  EMAIL:
+  - '[a-zA-Z0-9][-+.\w]{1,127}@([a-zA-Z0-9][-a-zA-Z0-9]{0,63}.){,3}(org|com|cn|net|edu|mail)'
   FILE PATH:
     flags: I|X
-    re_filters:
-    - '[\\/].*sdk.*'
-    - '[\\/]alibaba'
-    - '[\\/]aliyun'
-    - '[\\/]annotation'
-    - '[\\/]apache'
-    - '[\\/]chromium'
-    - '[\\/]collections'
-    - '[\\/]eclipse'
-    - '[\\/]facebook'
-    - '[\\/]functions'
-    - '[\\/]github'
-    - '[\\/]google'
-    - '[\\/]internal'
-    - '[\\/]jetbrains'
-    - '[\\/]oppo'
-    - '[\\/]reactnative'
-    - '[\\/]reflect'
-    - '[\\/]sdklib'
-    - '[\\/]sequences'
-    - '[\\/]taobao'
-    - '[\\/]tencent'
-    - '[\\/]unionpay'
-    - '[\\/]view'
-    - '[\\/]vivo'
-    - '[\\/]webkit'
-    - '[\\/]xiaomi'
+    re_filters: []
     regexp:
-    - '[a-zA-z]:([\\/][\w!#\(\)+=~\[\]\{\}][\w!#%&\(\)+=~\[\]\{\}\s]{3,}){2,120}'
+    - ([a-z]:\\)?([\\/])(users?|windows?|program files(\(x\d{2,3}\))?|s?bin|etc|usr|boot|dev|home|proc|opt|sys|srv|var)(\2[.\w!#\(~\[\{][.\w!#&\(\)+=~\[\]\{\}\s]{2,63}){1,16}
   FUZZY MATCH:
     flags: I
     regexp:
-    - APP[\w]{,8}(ID|KEY|NUM|ENC)[\w]{,8}[\s"\'`]*[=:(][\s"\'`]*[\x20-\x7F]{,128}?[\'"`]
-    - ACCESS[\w]{,8}(ID|KEY|NUM|ENC)[\w]{,8}[\s"\'`]*[=:(][\s"\'`]*[\x20-\x7F]{,128}?[\'"`]
-    - USER[\w]{,8}(ID|KEY|NAME)[\w]{,8}[\s"\'`]*[=:(][\s"\'`]*[\x20-\x7F]{,128}?[\'"`]
-    - PASS[\w]{,8}(ID|KEY|WORD)[\w]{,8}[\s"\'`]*[=:(][\s"\'`]*[\x20-\x7F]{,128}?[\'"`]
-    - SECRET[\w]{,16}[\s"\'`]*[=:(][\s"\'`]*[\'"`][\x20-\x7F]{,128}?[\'"`]
-    - USR[_\-A-Z][\w]{,16}[\s"\'`]*[=:(][\s"\'`]*[\'"`][\x20-\x7F]{,128}?[\'"`]
-    - PWD[_\-A-Z][\w]{,16}[\s"\'`]*[=:(][\s"\'`]*[\'"`][\x20-\x7F]{,128}?[\'"`]
-    - TOKEN[_\-A-Z][\w]{,16}[\s"\'`]*[=:(][\s"\'`]*[\'"`][\x20-\x7F]{,128}?[\'"`]
+    - (APP|ACCESS|USER|PASS|OSS|ECS|CVM|AWS)[\w]{,8}(ID|KEY|NUM|ENC|CODE|SEC|WORD)[\w]{,16}["\'`]?\s*[=:(\{\[]\s*["\'`][\x20-\x7F]{,128}?[\'"`]
+    - (USR|PWD|COOKIE)[_\-A-Z][\w]{,16}["\'`]?\s*[=:(\{\[]\s*["\'`][\x20-\x7F]{,128}?[\'"`]
+    - (SECRET|SIGN|TOKEN)[\w]{,16}["\'`]?\s*[=:(\{\[]\s*["\'`][\x20-\x7F]{,128}?[\'"`]
   JSON WEB TOKEN(JWT):
   - ey[0-9a-zA-Z/+]{4,}={,2}\.[0-9a-zA-Z/+]{6,}={,2}\.[A-Za-z0-9-_]+
+  PHONE:
+  - (13[0-9]|14[5-9]|15[0-3,5-9]|16[6]|17[0-8]|18[0-9]|19[8,9])\d{8}
   URL:
     re_filters:
-    - adobe\.(org|com|cn|net|edu|io)
-    - ali[\w-]*\.(org|com|cn|net|edu|io)
-    - amap\.(org|com|cn|net|edu|io)
-    - android\.(org|com|cn|net|edu|io)
-    - apache\.(org|com|cn|net|edu|io)
-    - baidu[\w-]*\.(org|com|cn|net|edu|io)
-    - bing\.(org|com|cn|net|edu|io)
-    - cdn[\w-]*\.(org|com|cn|net|edu|io)
-    - digicert\.(org|com|cn|net|edu|io)
-    - eclipse\.(org|com|cn|net|edu|io)
-    - example[\w-]*\.(org|com|cn|net|edu|io)
-    - github\.(org|com|cn|net|edu|io)
-    - gnu\.(org|com|cn|net|edu|io)
-    - godaddy\.(org|com|cn|net|edu|io)
-    - google\.(org|com|cn|net|edu|io)
-    - googlesource\.(org|com|cn|net|edu|io)
-    - jd\.(org|com|cn|net|edu|io)
-    - mircosoft\.(org|com|cn|net|edu|io)
-    - mozilla\.(org|com|cn|net|edu|io)
-    - openssl\.(org|com|cn|net|edu|io)
-    - oracle.(org|com|cn|net|edu|io)
-    - qq\.(org|com|cn|net|edu|io)
-    - spring.(org|com|cn|net|edu|io)
-    - ssh[\w-]*\.(org|com|cn|net|edu|io)
-    - ssl[\w-]*\.(org|com|cn|net|edu|io)
-    - sun.(org|com|cn|net|edu|io)
-    - umang\.(org|com|cn|net|edu|io)
-    - w3\.(org|com|cn|net|edu|io)
-    - xml.(org|com|cn|net|edu|io)
+    - (adobe|amap|android|apache|bing|digicert|eclipse|github|gnu|godaddy|google|googlesource|jd|microsoft|openxmlformats|outlook|mozilla|openssl|oracle|qq|spring|sun|umang|w3|xml)\.(org|com|cn|net|edu|io)
+    - (ali|baidu|cdn|example|ssh|ssl)[\w-]*\.(org|com|cn|net|edu|io)
     regexp:
     - (ftp|https?):\/\/[%.\w\-]+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?
 target_path: ''

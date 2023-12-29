@@ -41,48 +41,51 @@ def string_to_reg_flags(flags: str):
     return flags_int
 
 
+def is_filter_base64(result: AnyStr):
+    if len(result) % 4 != 0:
+        return True, ''
+    try:
+        # 编码错误的全都丢掉，不丢掉也看不懂
+        ret_extend = base64.b64decode(result).decode('utf-8')
+        if not re.search(r'^[\u0020-\u007F\u2010-\u202f\u3000-\u301f\u4e00-\u9fa5\uff00-\uffef]+$', ret_extend):
+            return True, ''
+        # \u0020-\u007F：英文可视字符集
+        # \u2010-\u202f：中文部分符号集
+        # \u3000-\u301f：中文部分符号集
+        # \u4e00-\u9fa5：中文常见文字集
+        # \u2e80-\u9fff：中文文字及中文异形文字集
+        # \uff00-\uffef：中文部分符号集
+    except UnicodeDecodeError:
+        return True, ''
+    except binascii.Error:
+        return True, ''
+    return False, ret_extend
+
+
+def is_filter_jwt(result: AnyStr):
+    times = 0
+    res_split = result.split(b'.')
+    while times < 2:
+        if len(res_split[times]) % 4 != 0:
+            return True, ''
+        times += 1
+    return False, ''
+
+
+def is_filter_result(result: AnyStr, filters: List[AnyStr], flags: int):
+    if not filters:
+        return False, ''
+    for fil in filters:
+        if re.search(fil, result, flags):
+            return True, ''
+    return False, ''
+
+
 # @log_run_times
 def search_content(file_object: Union[pathlib.Path, bytes], rules: Dict[str, List[str]],
                    split: bytes = b'[\x00-\x1F\x7F]+',
                    is_re_all: bool = False) -> List[
     Dict[str, str]]:
-    def is_filter_base64(result: AnyStr):
-        if len(result) % 4 != 0:
-            return True, ''
-        try:
-            # 编码错误的全都丢掉，不丢掉也看不懂
-            ret_extend = base64.b64decode(result).decode('utf-8')
-            if not re.search(r'^[\u0020-\u007F\u2010-\u202f\u3000-\u301f\u4e00-\u9fa5\uff00-\uffef]+$', ret_extend):
-                return True, ''
-            # \u0020-\u007F：英文可视字符集
-            # \u2010-\u202f：中文部分符号集
-            # \u3000-\u301f：中文部分符号集
-            # \u4e00-\u9fa5：中文常见文字集
-            # \u2e80-\u9fff：中文文字及中文异形文字集
-            # \uff00-\uffef：中文部分符号集
-        except UnicodeDecodeError:
-            return True, ''
-        except binascii.Error:
-            return True, ''
-        return False, ret_extend
-
-    def is_filter_jwt(result: AnyStr):
-        times = 0
-        res_split = result.split(b'.')
-        while times < 2:
-            if len(res_split[times]) % 4 != 0:
-                return True, ''
-            times += 1
-        return False, ''
-
-    def is_filter_result(result: AnyStr, filters: List[AnyStr], flags: int):
-        if not filters:
-            return False, ''
-        for fil in filters:
-            if re.search(fil, result, flags):
-                return True, ''
-        return False, ''
-
     ret = []
     row_contents = [file_object]
     if isinstance(file_object, pathlib.Path):
@@ -120,7 +123,8 @@ def search_content(file_object: Union[pathlib.Path, bytes], rules: Dict[str, Lis
                     continue
 
                 ret.append({
-                    'file': file_object.__str__(), 'group': rule_name, 'regexp': regexp, 'match': result_text,
+                    'file': file_object.__str__(), 'group': rule_name, 'regexp': regexp.decode('utf-8'),
+                    'match': result_text,
                     'extend': extend})
                 if not is_re_all:
                     # 如果关闭了匹配所有正则组数据且已发现有用数据，则退出循环
@@ -164,16 +168,6 @@ def run():
     print('[*] file loading...')
     for filepath in filelist:
         pool.submit_super(search_content, filepath, groups, cfg.get('row_split'), cfg.get('is_re_all'))
-        # if filepath.stat().st_size < 5 * 1024 * 1024:
-        #     total += 1
-        #     pool.submit_super(search_content, filepath, groups, cfg.get('row_split'), cfg.get('is_re_all'))
-        #     continue
-        # for row in re.split(cfg.get('row_split'), filepath.read_bytes()):
-        #     if len(row) < 12:
-        #         # 单行内容少于8个字符，丢掉
-        #         continue
-        #     total += 1
-        #     pool.submit_super(search_content, row, groups, is_re_all = cfg.get('is_re_all'))
 
     print('[*] analyzing...\n')
     result_gen = pool.result_yield()
@@ -194,13 +188,16 @@ def run():
             if not cfg.get('is_silent'):
                 print('[+] group: {}, match: {}, file: {}'.format(result['group'], result['match'], result['file']))
     output_format = cfg.get('output_format')
+    filename = 'results.csv'
     if output_format == 'json':
-        with open('results.json', 'w', encoding='utf-8') as _f:
+        filename = 'results.json'
+        with open(filename, 'w', encoding='utf-8') as _f:
             _f.write(json.dumps(ret))
     else:
-        to_csv(ret, 'results.csv')
+        to_csv(ret, filename)
 
-    print('total file number:', len(filelist))
+    print('[*] total file number:', len(filelist))
+    print('[+] output to:', pathlib.Path(filename).absolute())
     return ret
 
 
@@ -212,6 +209,11 @@ def to_csv(data: Union[Dict[str, Any], List[Dict[str, Any]]], filename: str = 'o
     dataframe.to_csv(filename, quoting=csv.QUOTE_MINIMAL)
 
 
+# 考虑字典数据、列表数据、函数数据
+FUZZY_UNIVERSAL_STRING = r'["\'`]?\s*[=:(\{\[]\s*["\'`][\x20-\x7F]{,128}?[\'"`]'
+#
+PATH_COMMON_STRING = r'users?|windows?|program files(\(x\d{2,3}\))?|s?bin|etc|usr|boot|dev|home|proc|opt|sys|srv|var'
+
 __DEFAULT_CONFIG = {
     'target_path': '',
     'config_path': 'config.yaml',
@@ -222,84 +224,35 @@ __DEFAULT_CONFIG = {
     'rules': {
         'AKSK': [r'LTAI\w+'],
         'JSON WEB TOKEN(JWT)': [r'ey[0-9a-zA-Z/+]{4,}={,2}\.[0-9a-zA-Z/+]{6,}={,2}\.[A-Za-z0-9-_]+'],
-        'BASE64': [r'[0-9a-zA-Z/+]{8,}={,2}'],
         'FUZZY MATCH': {
             'flags': 'I',
             'regexp': [
-                r'APP[\w]{,8}(ID|KEY|NUM|ENC)[\w]{,8}[\s"\'`]*[=:(][\s"\'`]*[\x20-\x7F]{,128}?[\'"`]',
-                r'ACCESS[\w]{,8}(ID|KEY|NUM|ENC)[\w]{,8}[\s"\'`]*[=:(][\s"\'`]*[\x20-\x7F]{,128}?[\'"`]',
-                r'USER[\w]{,8}(ID|KEY|NAME)[\w]{,8}[\s"\'`]*[=:(][\s"\'`]*[\x20-\x7F]{,128}?[\'"`]',
-                r'PASS[\w]{,8}(ID|KEY|WORD)[\w]{,8}[\s"\'`]*[=:(][\s"\'`]*[\x20-\x7F]{,128}?[\'"`]',
-                r'SECRET[\w]{,16}[\s"\'`]*[=:(][\s"\'`]*[\'"`][\x20-\x7F]{,128}?[\'"`]',
-                r'USR[_\-A-Z][\w]{,16}[\s"\'`]*[=:(][\s"\'`]*[\'"`][\x20-\x7F]{,128}?[\'"`]',
-                r'PWD[_\-A-Z][\w]{,16}[\s"\'`]*[=:(][\s"\'`]*[\'"`][\x20-\x7F]{,128}?[\'"`]',
-                r'TOKEN[_\-A-Z][\w]{,16}[\s"\'`]*[=:(][\s"\'`]*[\'"`][\x20-\x7F]{,128}?[\'"`]',
-                # r'ID[_\-A-Z][\w]{,16}[=:(]\s*[\'"`][\x20-\x7F]{,128}?[\'"`]'
+                r'(APP|ACCESS|USER|PASS|OSS|ECS|CVM|AWS)[\w]{,8}(ID|KEY|NUM|ENC|CODE|SEC|WORD)[\w]{,16}%s' % FUZZY_UNIVERSAL_STRING,
+                # 考虑驼峰写法，下划线写法，MAP键值下面单词后必须接大写字母、下划线、中划线，否侧可能出现如：
+                r'(USR|PWD|COOKIE)[_\-A-Z][\w]{,16}%s' % FUZZY_UNIVERSAL_STRING,
+                r'(SECRET|SIGN|TOKEN)[\w]{,16}%s' % FUZZY_UNIVERSAL_STRING,
             ]},
+        'BASE64': [r'[0-9a-zA-Z/+]{8,}={,2}'],
         'URL': {
             'regexp': [r'(ftp|https?):\/\/[%.\w\-]+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?'],
             're_filters': [
-                r'adobe\.(org|com|cn|net|edu|io)',
-                r'ali[\w-]*\.(org|com|cn|net|edu|io)',
-                r'amap\.(org|com|cn|net|edu|io)',
-                r'android\.(org|com|cn|net|edu|io)',
-                r'apache\.(org|com|cn|net|edu|io)',
-                r'baidu[\w-]*\.(org|com|cn|net|edu|io)',
-                r'bing\.(org|com|cn|net|edu|io)',
-                r'cdn[\w-]*\.(org|com|cn|net|edu|io)',
-                r'digicert\.(org|com|cn|net|edu|io)',
-                r'eclipse\.(org|com|cn|net|edu|io)',
-                r'example[\w-]*\.(org|com|cn|net|edu|io)',
-                r'github\.(org|com|cn|net|edu|io)',
-                r'gnu\.(org|com|cn|net|edu|io)',
-                r'godaddy\.(org|com|cn|net|edu|io)',
-                r'google\.(org|com|cn|net|edu|io)',
-                r'googlesource\.(org|com|cn|net|edu|io)',
-                r'jd\.(org|com|cn|net|edu|io)',
-                r'mircosoft\.(org|com|cn|net|edu|io)',
-                r'mozilla\.(org|com|cn|net|edu|io)',
-                r'openssl\.(org|com|cn|net|edu|io)',
-                r'oracle.(org|com|cn|net|edu|io)',
-                r'qq\.(org|com|cn|net|edu|io)',
-                r'spring.(org|com|cn|net|edu|io)',
-                r'ssh[\w-]*\.(org|com|cn|net|edu|io)',
-                r'ssl[\w-]*\.(org|com|cn|net|edu|io)',
-                r'sun.(org|com|cn|net|edu|io)',
-                r'umang\.(org|com|cn|net|edu|io)',
-                r'w3\.(org|com|cn|net|edu|io)',
-                r'xml.(org|com|cn|net|edu|io)',
+                r'(adobe|amap|android|apache|bing|digicert|eclipse|github|gnu|godaddy|google|googlesource|jd'
+                r'|microsoft|openxmlformats|outlook|mozilla|openssl|oracle|qq|spring|sun|umang|w3|xml)\.('
+                r'org|com|cn|net|edu|io)',
+                r'(ali|baidu|cdn|example|ssh|ssl)[\w-]*\.(org|com|cn|net|edu|io)',
             ]},
+        'EMAIL': [r'[a-zA-Z0-9][-+.\w]{1,127}@([a-zA-Z0-9][-a-zA-Z0-9]{0,63}.){,3}(org|com|cn|net|edu|mail)'],
+        'PHONE': [r'(13[0-9]|14[5-9]|15[0-3,5-9]|16[6]|17[0-8]|18[0-9]|19[8,9])\d{8}'],
         'FILE PATH': {
             'flags': 'I|X',
             'regexp': [
-                r'[a-zA-z]:([\\/][\w!#\(\)+=~\[\]\{\}][\w!#%&\(\)+=~\[\]\{\}\s]{3,}){2,120}'],
+                r'([a-z]:\\)?([\\/])(users?|windows?|program files(\(x\d{2,3}\))?|s?bin|etc|usr|boot|dev|home|proc|opt'
+                r'|sys|srv|var)(\2[.\w!#\(~\[\{][.\w!#&\(\)+=~\[\]\{\}\s]{2,63}){1,16}'],
             're_filters': [
-                r'[\\/].*sdk.*',
-                r'[\\/]alibaba',
-                r'[\\/]aliyun',
-                r'[\\/]annotation',
-                r'[\\/]apache',
-                r'[\\/]chromium',
-                r'[\\/]collections',
-                r'[\\/]eclipse',
-                r'[\\/]facebook',
-                r'[\\/]functions',
-                r'[\\/]github',
-                r'[\\/]google',
-                r'[\\/]internal',
-                r'[\\/]jetbrains',
-                r'[\\/]oppo',
-                r'[\\/]reactnative',
-                r'[\\/]reflect',
-                r'[\\/]sdklib',
-                r'[\\/]sequences',
-                r'[\\/]taobao',
-                r'[\\/]tencent',
-                r'[\\/]unionpay',
-                r'[\\/]view',
-                r'[\\/]vivo',
-                r'[\\/]webkit',
-                r'[\\/]xiaomi',
+                # r'[\\/].*sdk.*',
+                # r'[\\/](alibaba|aliyun|annotation|apache|chromium|collections|eclipse|facebook|functions|github|google'
+                # r'|internal|jetbrains|oppo|reactnative|reflect|sdklib|sequences|taobao|tencent|unionpay|view|vivo'
+                # r'|webkit|xiaomi)',
             ]},
     },
     'is_re_all': False,
@@ -311,13 +264,13 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description='''
-███████╗███████╗███╗   ██╗███████╗██╗████████╗██╗██╗   ██╗███████╗
-██╔════╝██╔════╝████╗  ██║██╔════╝██║╚══██╔══╝██║██║   ██║██╔════╝
-███████╗█████╗  ██╔██╗ ██║███████╗██║   ██║   ██║██║   ██║█████╗  
-╚════██║██╔══╝  ██║╚██╗██║╚════██║██║   ██║   ██║╚██╗ ██╔╝██╔══╝  
-███████║███████╗██║ ╚████║███████║██║   ██║   ██║ ╚████╔╝ ███████╗
-╚══════╝╚══════╝╚═╝  ╚═══╝╚══════╝╚═╝   ╚═╝   ╚═╝  ╚═══╝  ╚══════╝
-    v0.1.2
+    ███████╗███████╗███╗   ██╗███████╗██╗████████╗██╗██╗   ██╗███████╗
+    ██╔════╝██╔════╝████╗  ██║██╔════╝██║╚══██╔══╝██║██║   ██║██╔════╝
+    ███████╗█████╗  ██╔██╗ ██║███████╗██║   ██║   ██║██║   ██║█████╗  
+    ╚════██║██╔══╝  ██║╚██╗██║╚════██║██║   ██║   ██║╚██╗ ██╔╝██╔══╝  
+    ███████║███████╗██║ ╚████║███████║██║   ██║   ██║ ╚████╔╝ ███████╗
+    ╚══════╝╚══════╝╚═╝  ╚═══╝╚══════╝╚═╝   ╚═╝   ╚═╝  ╚═══╝  ╚══════╝
+    v0.1.3
     by 0xn0ne, https://github.com/0xn0ne/sensitive-helper
 ''')
     parser.add_argument(
@@ -351,8 +304,9 @@ if __name__ == '__main__':
             del nargs[key]
 
     cfg = utils.configurator.new(filepath=args.config_path, template=__DEFAULT_CONFIG)
-    cfg.save()
+    # cfg.save()
     cfg.raw.update(nargs)
+    print('[*] config:', cfg.gen_pretty(depth=2, filters=['rules']))
 
     rules = cfg.get('rules')
     for rule in rules.values():
@@ -366,3 +320,6 @@ if __name__ == '__main__':
     cfg.raw['row_split'] = cfg.raw['row_split'].encode()
 
     run()
+
+    # TODO: 添加docx、xlsx、pptx处理逻辑
+    # TODO: 添加zip、rar、gz等压缩格式处理逻辑

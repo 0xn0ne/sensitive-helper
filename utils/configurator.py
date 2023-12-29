@@ -1,7 +1,7 @@
 import copy
 import json
 import os
-from typing import Any, Union, Dict, AnyStr
+from typing import Any, Union, Dict, AnyStr, Iterable, List
 
 import toml
 import yaml
@@ -27,7 +27,6 @@ def map_merge(dst: Dict, src: Dict):
 
 
 class BaseConfigurator:
-
     def __init__(self, template: Dict = None):
         self.raw: Union[Dict, Any] = template or {}
 
@@ -81,6 +80,42 @@ class BaseConfigurator:
             return False
         return True
 
+    def gen_pretty(self, objs: Iterable = None, depth: int = 3, filters: List[str] = None):
+        def gen_value(value, depth_next, parent_next):
+            if isinstance(value, Dict):
+                value = '{{{}}}'.format(recursion_pretty(value, depth_next, parent_next))
+            if isinstance(value, List):
+                value = '[{}]'.format(recursion_pretty(value, depth_next, parent_next))
+            return value
+
+        def recursion_pretty(obj_data, depth_curr, parent: str = ''):
+            if depth_curr < 1:
+                return '...'
+
+            print_list = []
+            if isinstance(obj_data, Dict):
+                for key in obj_data:
+                    if not obj_data[key]:
+                        continue
+                    parent_next = '{}.{}'.format(parent, key) if parent else key
+                    if filters and parent_next in filters:
+                        continue
+                    print_list.append('{}: {}'.format(key, gen_value(obj_data[key], depth_curr - 1, parent_next)))
+            if isinstance(obj_data, List):
+                for index, val in enumerate(obj_data):
+                    if not val:
+                        continue
+                    parent_next = '{}.{}'.format(parent, index) if parent else str(index)
+                    if filters and parent_next in filters:
+                        continue
+                    print_list.append(gen_value(val, depth_curr - 1, parent_next))
+            if depth == depth_curr and isinstance(obj_data, Dict):
+                return ' | '.join(print_list)
+            return ', '.join(print_list)
+
+        objs = objs if objs else self.raw
+        return recursion_pretty(objs, depth)
+
     def __str__(self):
         return '{}, {}>'.format(super().__str__()[:-1], self.raw)
 
@@ -127,13 +162,18 @@ if __name__ == '__main__':
     cfg.set('keya', 1024)
     cfg.set('keyb', {})
     cfg.set('keyc', ['a', 'b'])
-    cfg.set('key.b', {'user': 'lee'})
-    cfg.set('key.b.c', {'password': 'pass'})
+    cfg.set('keys.b', {'user': 'lee', 'password': 'pass'})
+    cfg.set('keys.c.info', {
+        'name': 'lilei',
+        'age': 20,
+        'female': True,
+        'like': ['basketball', 'swim']})
     assert cfg.get('keya', 996) == 1024
     assert cfg.get('keyb', 1024) == {}
     assert cfg.get('keyc.a', 1024) == 1024
     try:
-        assert cfg.get('key.b.c.d') == 'this is error test.'
+        assert cfg.get('keys.b.c.d') == 'this is error test.'
+        raise SystemError('assert failure.')
     except AssertionError as e:
         pass
 
@@ -147,3 +187,10 @@ testb: {}
 testc:
 - a
 - b''', fmt='yaml')
+
+    assert cfg.gen_pretty() == ('keya: 1024 | keyc: [a, b] | keys: {b: {user: lee, password: pass}, c: {info: {...}}} '
+                                '| aaaa: {user: lee} | testa: 1024 | testc: [a, b]')
+    assert cfg.gen_pretty(depth=2) == ('keya: 1024 | keyc: [a, b] | keys: {b: {...}, c: {...}} | aaaa: {user: lee} | '
+                                       'testa: 1024 | testc: [a, b]')
+    assert cfg.gen_pretty(filters=['aaaa', 'keys.c.info']) == ('keya: 1024 | keyc: [a, b] | keys: {b: {user: lee, '
+                                                               'password: pass}, c: {}} | testa: 1024 | testc: [a, b]')
