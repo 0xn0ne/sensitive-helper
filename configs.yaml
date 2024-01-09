@@ -21,7 +21,7 @@ rules:
   FUZZY MATCH:
     flags: I
     regexp:
-    - (APP|ACCESS|USER|PASS|OSS|ECS|CVM|AWS)[\w]{,8}(ID|KEY|NUM|ENC|CODE|SEC|WORD)[\w]{,16}["\'`]?\s*[=:(\{\[]\s*["\'`][\x20-\x7F]{,128}?[\'"`]
+    - (APP|ACCESS|USER|PASS|OSS|ECS|CVM|AWS)[\w]{,8}(NAME|ID|KEY|NUM|ENC|CODE|SEC|WORD)[\w]{,16}["\'`]?\s*[=:(\{\[]\s*["\'`][\x20-\x7F]{,128}?[\'"`]
     - (USR|PWD|COOKIE)[_\-A-Z][\w]{,16}["\'`]?\s*[=:(\{\[]\s*["\'`][\x20-\x7F]{,128}?[\'"`]
     - (SECRET|SIGN|TOKEN)[\w]{,16}["\'`]?\s*[=:(\{\[]\s*["\'`][\x20-\x7F]{,128}?[\'"`]
   JSON WEB TOKEN(JWT):
@@ -30,7 +30,7 @@ rules:
   - (13[0-9]|14[5-9]|15[0-3,5-9]|16[6]|17[0-8]|18[0-9]|19[8,9])\d{8}
   URL:
     re_filters:
-    - (adobe|amap|android|apache|bing|digicert|eclipse|github|gnu|godaddy|google|googlesource|jd|microsoft|openxmlformats|outlook|mozilla|openssl|oracle|qq|spring|sun|umang|w3|xml)\.(org|com|cn|net|edu|io)
+    - (adobe|amap|android|apache|bing|digicert|eclipse|freecodecamp|github|githubusercontent|gnu|godaddy|google|googlesource|youtube|youtu|jd|npmjs|microsoft|openxmlformats|outlook|mozilla|openssl|oracle|qq|spring|sun|umang|w3|wikipedia|xml)\.(org|com|cn|net|edu|io|be)
     - (ali|baidu|cdn|example|ssh|ssl)[\w-]*\.(org|com|cn|net|edu|io)
     regexp:
     - (ftp|https?):\/\/[%.\w\-]+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?

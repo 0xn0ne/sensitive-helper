@@ -165,3 +165,8 @@ cython_debug/
 .DS_Store
 .cache/
 cache/
+*.rar
+*.zip
+*.7z
+*.tgz
+*.tar

@@ -1,7 +1,7 @@
 import copy
 import json
 import os
-from typing import Any, Union, Dict, AnyStr, Iterable, List
+from typing import Any, AnyStr, Dict, Iterable, List, Union
 
 import toml
 import yaml
@@ -150,8 +150,9 @@ class FileConfigurator(BaseConfigurator):
         return True
 
 
-def new(name: str = '__DEFAULT__', base_class: Union[Any, FileConfigurator] = FileConfigurator, *args,
-        **kwargs) -> FileConfigurator:
+def new(
+    name: str = '__DEFAULT__', base_class: Union[Any, FileConfigurator] = FileConfigurator, *args, **kwargs
+) -> FileConfigurator:
     if name not in _G_CFG:
         _G_CFG[name] = base_class(*args, **kwargs)
     return _G_CFG[name]
@@ -163,11 +164,7 @@ if __name__ == '__main__':
     cfg.set('keyb', {})
     cfg.set('keyc', ['a', 'b'])
     cfg.set('keys.b', {'user': 'lee', 'password': 'pass'})
-    cfg.set('keys.c.info', {
-        'name': 'lilei',
-        'age': 20,
-        'female': True,
-        'like': ['basketball', 'swim']})
+    cfg.set('keys.c.info', {'name': 'lilei', 'age': 20, 'female': True, 'like': ['basketball', 'swim']})
     assert cfg.get('keya', 996) == 1024
     assert cfg.get('keyb', 1024) == {}
     assert cfg.get('keyc.a', 1024) == 1024
@@ -180,17 +177,24 @@ if __name__ == '__main__':
     # cfg.load_from_url('https://httpbin.org/get')
     # assert cfg.get('url') == 'https://httpbin.org/get'
 
-    cfg.loads('''aaaa:
+    cfg.loads(
+        '''aaaa:
     user: lee
 testa: 1024
 testb: {}
 testc:
 - a
-- b''', fmt='yaml')
+- b''',
+        fmt='yaml',
+    )
 
-    assert cfg.gen_pretty() == ('keya: 1024 | keyc: [a, b] | keys: {b: {user: lee, password: pass}, c: {info: {...}}} '
-                                '| aaaa: {user: lee} | testa: 1024 | testc: [a, b]')
-    assert cfg.gen_pretty(depth=2) == ('keya: 1024 | keyc: [a, b] | keys: {b: {...}, c: {...}} | aaaa: {user: lee} | '
-                                       'testa: 1024 | testc: [a, b]')
-    assert cfg.gen_pretty(filters=['aaaa', 'keys.c.info']) == ('keya: 1024 | keyc: [a, b] | keys: {b: {user: lee, '
-                                                               'password: pass}, c: {}} | testa: 1024 | testc: [a, b]')
+    assert cfg.gen_pretty() == (
+        'keya: 1024 | keyc: [a, b] | keys: {b: {user: lee, password: pass}, c: {info: {...}}} '
+        '| aaaa: {user: lee} | testa: 1024 | testc: [a, b]'
+    )
+    assert cfg.gen_pretty(depth=2) == (
+        'keya: 1024 | keyc: [a, b] | keys: {b: {...}, c: {...}} | aaaa: {user: lee} | ' 'testa: 1024 | testc: [a, b]'
+    )
+    assert cfg.gen_pretty(filters=['aaaa', 'keys.c.info']) == (
+        'keya: 1024 | keyc: [a, b] | keys: {b: {user: lee, ' 'password: pass}, c: {}} | testa: 1024 | testc: [a, b]'
+    )

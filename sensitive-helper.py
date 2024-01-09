@@ -11,13 +11,12 @@ import json
 import pathlib
 import re
 import time
-from typing import List, Dict, Any, Union, AnyStr
+from typing import Any, AnyStr, Dict, List, Union
 
 import pandas
 import tqdm
 
-import utils.configurator
-from utils.process import ProcessPoolHelper
+from utils import compress, configurator, office, process
 
 
 def log_run_times(func):
@@ -82,10 +81,12 @@ def is_filter_result(result: AnyStr, filters: List[AnyStr], flags: int):
 
 
 # @log_run_times
-def search_content(file_object: Union[pathlib.Path, bytes], rules: Dict[str, List[str]],
-                   split: bytes = b'[\x00-\x1F\x7F]+',
-                   is_re_all: bool = False) -> List[
-    Dict[str, str]]:
+def search_content(
+    file_object: Union[pathlib.Path, bytes],
+    rules: Dict[str, List[str]],
+    split: bytes = b'[\x00-\x1F\x7F]+',
+    is_re_all: bool = False,
+) -> List[Dict[str, str]]:
     ret = []
     row_contents = [file_object]
     if isinstance(file_object, pathlib.Path):
@@ -122,10 +123,15 @@ def search_content(file_object: Union[pathlib.Path, bytes], rules: Dict[str, Lis
                 if is_filter:
                     continue
 
-                ret.append({
-                    'file': file_object.__str__(), 'group': rule_name, 'regexp': regexp.decode('utf-8'),
-                    'match': result_text,
-                    'extend': extend})
+                ret.append(
+                    {
+                        'file': file_object.__str__(),
+                        'group': rule_name,
+                        'regexp': regexp.decode('utf-8'),
+                        'match': result_text,
+                        'extend': extend,
+                    }
+                )
                 if not is_re_all:
                     # 如果关闭了匹配所有正则组数据且已发现有用数据，则退出循环
                     return ret
@@ -142,20 +148,27 @@ def gen_file_list(src_path: str, exclude_files: List[str]) -> List[pathlib.Path]
             is_skip = False
             if filepath.is_dir():
                 continue
+            filename = filepath.name
             for r_exclude in exclude_files:
                 # 文件名正则匹配，在排除名单中则排除文件
-                if not re.match(r_exclude, filepath.name):
-                    continue
-                is_skip = True
-                break
+                if re.match(r_exclude, filename):
+                    is_skip = True
+                    break
             if is_skip:
                 continue
+            if filename.endswith('.docx') and not filename.startswith('~$'):
+                office.docx_handler(filepath)
+            elif filename.endswith('.xlsx') and not filename.startswith('~$'):
+                office.xlsx_handler(filepath)
+            else:
+                compress.uncompress(filepath, is_error=False, is_recursive=True)
             ret.append(filepath)
     return ret
 
 
 def run():
-    pool = ProcessPoolHelper(max_workers=cfg.get('process_number'))
+    pool = process.ProcessPoolHelper(max_workers=cfg.get('process_number'))
+    print('[*] file loading...')
     filelist = gen_file_list(cfg.get('target_path'), cfg.get('exclude_files'))
     if not filelist:
         print('[!] the file path is empty. please check whether the path is correct.\n')
@@ -164,8 +177,6 @@ def run():
     ret = []
     result_filter_list = []
     groups = cfg.get('rules')
-    total = 0
-    print('[*] file loading...')
     for filepath in filelist:
         pool.submit_super(search_content, filepath, groups, cfg.get('row_split'), cfg.get('is_re_all'))
 
@@ -173,8 +184,12 @@ def run():
     result_gen = pool.result_yield()
     if cfg.get('is_silent'):
         result_gen = tqdm.tqdm(
-            pool.result_yield(), total=len(filelist), mininterval=1, ncols=80,
-            bar_format='{n_fmt}/{total_fmt} [{bar}] {elapsed}<{remaining},{rate_fmt}{postfix}')
+            pool.result_yield(),
+            total=len(filelist),
+            mininterval=1,
+            ncols=80,
+            bar_format='{n_fmt}/{total_fmt} [{bar}] {elapsed}<{remaining},{rate_fmt}{postfix}',
+        )
     for results in result_gen:
         if not results:
             continue
@@ -188,7 +203,7 @@ def run():
             if not cfg.get('is_silent'):
                 print('[+] group: {}, match: {}, file: {}'.format(result['group'], result['match'], result['file']))
     output_format = cfg.get('output_format')
-    filename = 'results.csv'
+    filename = 'results_{}.csv'.format(time.strftime("%H%M%S", time.localtime()))
     if output_format == 'json':
         filename = 'results.json'
         with open(filename, 'w', encoding='utf-8') as _f:
@@ -227,73 +242,89 @@ __DEFAULT_CONFIG = {
         'FUZZY MATCH': {
             'flags': 'I',
             'regexp': [
-                r'(APP|ACCESS|USER|PASS|OSS|ECS|CVM|AWS)[\w]{,8}(ID|KEY|NUM|ENC|CODE|SEC|WORD)[\w]{,16}%s' % FUZZY_UNIVERSAL_STRING,
+                r'(APP|ACCESS|USER|PASS|OSS|ECS|CVM|AWS)[\w]{,8}(NAME|ID|KEY|NUM|ENC|CODE|SEC|WORD)[\w]{,16}%s'
+                % FUZZY_UNIVERSAL_STRING,
                 # 考虑驼峰写法，下划线写法，MAP键值下面单词后必须接大写字母、下划线、中划线，否侧可能出现如：
                 r'(USR|PWD|COOKIE)[_\-A-Z][\w]{,16}%s' % FUZZY_UNIVERSAL_STRING,
                 r'(SECRET|SIGN|TOKEN)[\w]{,16}%s' % FUZZY_UNIVERSAL_STRING,
-            ]},
+            ],
+        },
         'BASE64': [r'[0-9a-zA-Z/+]{8,}={,2}'],
         'URL': {
             'regexp': [r'(ftp|https?):\/\/[%.\w\-]+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?'],
             're_filters': [
-                r'(adobe|amap|android|apache|bing|digicert|eclipse|github|gnu|godaddy|google|googlesource|jd'
-                r'|microsoft|openxmlformats|outlook|mozilla|openssl|oracle|qq|spring|sun|umang|w3|xml)\.('
-                r'org|com|cn|net|edu|io)',
+                r'(adobe|amap|android|apache|bing|digicert|eclipse|freecodecamp|github|githubusercontent|gnu|godaddy|google|googlesource|youtube|youtu|jd'
+                r'|npmjs|microsoft|openxmlformats|outlook|mozilla|openssl|oracle|qq|spring|sun|umang|w3|wikipedia|xml)\.('
+                r'org|com|cn|net|edu|io|be)',
                 r'(ali|baidu|cdn|example|ssh|ssl)[\w-]*\.(org|com|cn|net|edu|io)',
-            ]},
+            ],
+        },
         'EMAIL': [r'[a-zA-Z0-9][-+.\w]{1,127}@([a-zA-Z0-9][-a-zA-Z0-9]{0,63}.){,3}(org|com|cn|net|edu|mail)'],
         'PHONE': [r'(13[0-9]|14[5-9]|15[0-3,5-9]|16[6]|17[0-8]|18[0-9]|19[8,9])\d{8}'],
         'FILE PATH': {
             'flags': 'I|X',
             'regexp': [
                 r'([a-z]:\\)?([\\/])(users?|windows?|program files(\(x\d{2,3}\))?|s?bin|etc|usr|boot|dev|home|proc|opt'
-                r'|sys|srv|var)(\2[.\w!#\(~\[\{][.\w!#&\(\)+=~\[\]\{\}\s]{2,63}){1,16}'],
+                r'|sys|srv|var)(\2[.\w!#\(~\[\{][.\w!#&\(\)+=~\[\]\{\}\s]{2,63}){1,16}'
+            ],
             're_filters': [
                 # r'[\\/].*sdk.*',
                 # r'[\\/](alibaba|aliyun|annotation|apache|chromium|collections|eclipse|facebook|functions|github|google'
                 # r'|internal|jetbrains|oppo|reactnative|reflect|sdklib|sequences|taobao|tencent|unionpay|view|vivo'
                 # r'|webkit|xiaomi)',
-            ]},
+            ],
+        },
     },
     'is_re_all': False,
-    'is_silent': False
+    'is_silent': False,
 }
 cfg = {}
 
 if __name__ == '__main__':
     import argparse
 
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description='''
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description='''
     ███████╗███████╗███╗   ██╗███████╗██╗████████╗██╗██╗   ██╗███████╗
     ██╔════╝██╔════╝████╗  ██║██╔════╝██║╚══██╔══╝██║██║   ██║██╔════╝
     ███████╗█████╗  ██╔██╗ ██║███████╗██║   ██║   ██║██║   ██║█████╗  
     ╚════██║██╔══╝  ██║╚██╗██║╚════██║██║   ██║   ██║╚██╗ ██╔╝██╔══╝  
     ███████║███████╗██║ ╚████║███████║██║   ██║   ██║ ╚████╔╝ ███████╗
     ╚══════╝╚══════╝╚═╝  ╚═══╝╚══════╝╚═╝   ╚═╝   ╚═╝  ╚═══╝  ╚══════╝
-    v0.1.3
+    v0.1.4
     by 0xn0ne, https://github.com/0xn0ne/sensitive-helper
-''')
+''',
+    )
     parser.add_argument(
-        '-t', '--target-path', required=True,
-        help='search for file paths or folder paths for sensitive cache (eg. ~/download/folder).')
+        '-t',
+        '--target-path',
+        required=True,
+        help='search for file paths or folder paths for sensitive cache (eg. ~/download/folder).',
+    )
+    parser.add_argument('-p', '--process-number', default=5, type=int, help='number of program processes (default: 5).')
     parser.add_argument(
-        '-p', '--process-number', default=5, type=int,
-        help='number of program processes (default: 5).')
+        '-c',
+        '--config-path',
+        default='configs.yaml',
+        help='path to the yaml configuration file (default: configs.yaml).',
+    )
+    parser.add_argument('-o', '--output-format', help='output file format, available formats json, csv (default: csv).')
     parser.add_argument(
-        '-c', '--config-path', default='configs.yaml',
-        help='path to the yaml configuration file (default: configs.yaml).')
+        '-e', '--exclude-files', nargs='+', help='excluded files, using regular matching (eg. \\.DS_Store .*bin .*doc).'
+    )
     parser.add_argument(
-        '-o', '--output-format',
-        help='output file format, available formats json, csv (default: csv).')
+        '-a',
+        '--is-re-all',
+        action='store_true',
+        help='hit a single regular expression per file or match all regular expressions to exit the match loop.',
+    )
     parser.add_argument(
-        '-e', '--exclude-files', nargs='+',
-        help='excluded files, using regular matching (eg. \\.DS_Store .*bin .*doc).')
-    parser.add_argument(
-        '-a', '--is-re-all', action='store_true',
-        help='hit a single regular expression per file or match all regular expressions to exit the match loop.')
-    parser.add_argument(
-        '-s', '--is-silent', action='store_true',
-        help='silent mode: when turned on, no hit data will be output on the console. use a progress bar instead.')
+        '-s',
+        '--is-silent',
+        action='store_true',
+        help='silent mode: when turned on, no hit data will be output on the console. use a progress bar instead.',
+    )
     args = parser.parse_args()
 
     print(parser.description)
@@ -303,7 +334,7 @@ if __name__ == '__main__':
         if nargs[key] is None:
             del nargs[key]
 
-    cfg = utils.configurator.new(filepath=args.config_path, template=__DEFAULT_CONFIG)
+    cfg = configurator.new(filepath=args.config_path, template=__DEFAULT_CONFIG)
     # cfg.save()
     cfg.raw.update(nargs)
     print('[*] config:', cfg.gen_pretty(depth=2, filters=['rules']))
@@ -320,6 +351,3 @@ if __name__ == '__main__':
     cfg.raw['row_split'] = cfg.raw['row_split'].encode()
 
     run()
-
-    # TODO: 添加docx、xlsx、pptx处理逻辑
-    # TODO: 添加zip、rar、gz等压缩格式处理逻辑

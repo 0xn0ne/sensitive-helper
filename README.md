@@ -1,4 +1,4 @@
-参考链接：https://github.com/securing/DumpsterDiver
+参考链接：<https://github.com/securing/DumpsterDiver>
 
 # Sensitive Helper
 
@@ -18,14 +18,14 @@
 
 进入项目目录，使用以下命令安装依赖库
 
-```
-$ pip3 install toml yaml tqdm pandas
+```bash
+pip3 install toml PyYAML tqdm pandas rarfile py7zr openpyxl
 ```
 
 或者使用 PIP 的 `requirement` 参数安装依赖库
 
-```
-$ pip3 install -r requirements.txt
+```bash
+pip3 install -r requirements.txt
 ```
 
 ### 基础用法
@@ -86,7 +86,7 @@ options:
 
 ### 默认模式输出样例
 
-```
+```bash
 $ python3 sensitive-helper.py -t "cache/" -a
 [*] file loading...
 [*] analyzing...
@@ -101,7 +101,7 @@ total file number: 5
 
 ### 静默模式输出样例
 
-```
+```bash
 $ python3 sensitive-helper.py -t "cache/" -a -s
 [*] file loading...
 [*] analyzing...

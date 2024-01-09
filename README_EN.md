@@ -1,4 +1,4 @@
-Reference: https://github.com/securing/DumpsterDiver
+Reference: <https://github.com/securing/DumpsterDiver>
 
 # Sensitive Helper
 
@@ -16,14 +16,14 @@ Regular expression-based data mining assistant for sensitive information on loca
 
 In the project directory and use the following command to install the dependent libraries
 
-```
-$ pip3 install toml yaml
+```bash
+pip3 install toml PyYAML tqdm pandas rarfile py7zr openpyxl
 ```
 
 Or use the `requirement` parameter of the PIP to install the dependency library
 
-```
-$ pip3 install -r requirements.txt
+```bash
+pip3 install -r requirements.txt
 ```
 
 ### Basic usage
@@ -53,7 +53,7 @@ $ pip3 install -r requirements.txt
 
 ### Usage
 
-```
+```bash
 % python3 sensitive-helper.py -h                                                    
 usage: sensitive-helper.py [-h] -t TARGET_PATH [-p PROCESS_NUMBER] [-c CONFIG] [-o OUTPUT] [-e EXCLUDE_FILES [EXCLUDE_FILES ...]] [-a]
 
@@ -84,7 +84,7 @@ optional arguments:
 
 ### Sample: Default Mode
 
-```
+```bash
 $ python3 sensitive-helper.py -t "cache/" -a
 [*] file loading...
 [*] analyzing...
@@ -99,7 +99,7 @@ total file number: 5
 
 ### Sample: Silent Mode
 
-```
+```bash
 $ python3 sensitive-helper.py -t "cache/" -a -s
 [*] file loading...
 [*] analyzing...
