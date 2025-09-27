@@ -1,10 +1,22 @@
 #!/bin/python3
 # _*_ coding:utf-8 _*_
 #
-# compress.py
-# 压缩文件处理工具
-# 参考链接：https://segmentfault.com/a/1190000007495352
-# pip install py7zr
+"""
+compress.py
+
+压缩文件处理工具：识别并解压常见压缩/打包格式（zip/tar/gz/7z/rar）。
+
+功能要点：
+- zip_info: 读取 zip 本地文件头判断是否 zip 以及压缩方式；
+- uncompress_*: 各格式的解压实现，输出到指定目录；
+- uncompress: 统一入口，自动识别并（可选）递归解压嵌套文件。
+
+依赖：
+- 7z: 需要 `py7zr`
+- rar: 需要安装系统工具（Windows: WinRAR 并在 PATH 中；Linux: unrar）
+
+参考：`https://segmentfault.com/a/1190000007495352`
+"""
 
 import gzip
 import pathlib
@@ -17,6 +29,7 @@ import rarfile
 
 
 def zip_info(file_path: pathlib.Path) -> Dict[str, Any]:
+    """读取 zip 文件头信息，返回是否为 zip 及压缩方式。"""
     ret = {'is_magic': False, 'compression': -1}
     with open(file_path, 'rb') as _f:
         byte_info = _f.read(30)
@@ -28,6 +41,7 @@ def zip_info(file_path: pathlib.Path) -> Dict[str, Any]:
 def uncompress_zip(
     file_path: Union[pathlib.Path, str], extract_dir: Union[pathlib.Path, str] = None, is_error: bool = True
 ) -> Union[pathlib.Path, Any]:
+    """解压 zip 文件到 `extract_dir`。自动使用本地头中的压缩方式。"""
     if isinstance(file_path, str):
         file_path = pathlib.Path(file_path)
     if not extract_dir:
@@ -47,6 +61,7 @@ def uncompress_zip(
 
 
 def is_tar(file_path: pathlib.Path):
+    """通过魔数判断是否为 tar 文件。"""
     with open(file_path, 'rb') as _f:
         if _f.read(262)[-5:] == b'ustar':
             return True
@@ -56,6 +71,7 @@ def is_tar(file_path: pathlib.Path):
 def uncompress_tar(
     file_path: Union[pathlib.Path, str], extract_dir: Union[pathlib.Path, str] = None
 ) -> Union[pathlib.Path, Any]:
+    """解包 tar/tar.* 文件到 `extract_dir`。"""
     if isinstance(file_path, str):
         file_path = pathlib.Path(file_path)
     if not extract_dir:
@@ -74,6 +90,7 @@ def uncompress_tar(
 
 
 def is_gz(file_path: pathlib.Path):
+    """通过魔数判断是否为 gzip 文件。"""
     with open(file_path, 'rb') as _f:
         if _f.read(2) == b'\x1F\x8B':
             return True
@@ -83,6 +100,7 @@ def is_gz(file_path: pathlib.Path):
 def uncompress_gz(
     file_path: Union[pathlib.Path, str], extract_dir: Union[pathlib.Path, str] = None
 ) -> Union[pathlib.Path, Any]:
+    """解压 gzip 文件；若内部为 tar 则继续调用 tar 解包。"""
     if isinstance(file_path, str):
         file_path = pathlib.Path(file_path)
     if not extract_dir:
@@ -103,6 +121,7 @@ def uncompress_gz(
 
 
 def is_7z(file_path: pathlib.Path):
+    """通过魔数判断是否为 7z 文件。"""
     with open(file_path, 'rb') as _f:
         if _f.read(6) == b'7z\xBC\xAF\x27\x1C':
             return True
@@ -112,6 +131,7 @@ def is_7z(file_path: pathlib.Path):
 def uncompress_7z(
     file_path: Union[pathlib.Path, str], extract_dir: Union[pathlib.Path, str] = None
 ) -> Union[pathlib.Path, Any]:
+    """解压 7z 文件到 `extract_dir`。"""
     if isinstance(file_path, str):
         file_path = pathlib.Path(file_path)
     if not extract_dir:
@@ -127,6 +147,7 @@ def uncompress_7z(
 
 
 def is_rar(file_path: pathlib.Path):
+    """通过魔数判断是否为 RAR 文件。"""
     with open(file_path, 'rb') as _f:
         if _f.read(4) == b'\x52\x61\x72\x21':
             return True
@@ -157,6 +178,7 @@ def uncompress_rar(
 
 
 def is_bz(file_path: pathlib.Path):
+    """通过魔数判断是否为 bzip2 文件。"""
     with open(file_path, 'rb') as _f:
         if _f.read(2) == b'\x42\x5A\x68':
             return True
@@ -170,8 +192,10 @@ def uncompress(
     is_recursive: bool = False,
     max_level=64,
 ) -> Union[pathlib.Path, Any]:
-    """
-    支持 gz/tar/7z/zip/rar
+    """统一解压入口，自动识别并可递归解压。
+
+    支持格式：gz/tar/7z/zip/rar。
+    当 `is_recursive=True` 时，将在 `max_level` 限制内递归处理嵌套压缩。
     """
     if not isinstance(file_path, pathlib.Path):
         file_path = pathlib.Path(file_path)

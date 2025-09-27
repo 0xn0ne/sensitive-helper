@@ -8,7 +8,12 @@
 
 基于正则表达式的本地文件敏感信息数据挖掘助手。如果要搜索网页上的敏感数据，可以把敏感数据导出到本地再进行搜索。优化了一下多线程的使用，优化了配置的使用方式。
 
-**注意**：如果默认规则不满足您的匹配需求，请自行调整 configs.yaml 文件中的 `rules` 部分内容进行匹配
+**注意**：
+
++ 如果默认规则不满足匹配需求，请自行调整 configs.yaml 文件中的 `rules` 部分内容进行匹配；
++ 进度条是按文件数量来统计进度的，如果卡住并不是程序卡死了，可能是文件太大了，比如 1G 文件；
++ 非静默模式是在匹配完成单个文件后才会输出命中数据，如果在扫描大文件没输出命中信息请耐心等待；
++ 添加的规则越多，扫描的速度越慢，尽可能使用 1 条正则表达式匹配所需要的特征；
 
 # 快速开始
 
@@ -38,7 +43,7 @@ pip3 install -r requirements.txt
 
 ```$ python3 sensitive-helper.py -t <你的搜索文件路径> -e ".*so" ".*gz"```
 
-如果觉得搜索速度太慢，可以使用 `-p` 参数调整搜索的进程数（默认为：5）以提高搜索速度，虽然Python 的多进程很差劲，但有总比没有好
+如果觉得搜索速度太慢，可以使用 `-p` 参数调整搜索的进程数（默认为：5）以提高搜索速度，虽然 Python 的多进程很差劲，但有总比没有好，注意一个进程只会处理一个文件，如果使用文本类打大文件，请先使用 `cut_text_files.py` 将文件切割再进行搜索会提升搜索速度。这个参数的值最佳设置推荐为 CPU 核心数相同，激进一点可以 CPU 核心数 * 2。
 **注意**：计算机性能不好设置不要超过20个进程数，程序涉及大量的IO、内存操作，计算机可能会崩溃，比如我的电脑。
 
 ```$ python3 sensitive-helper.py -t <你的搜索文件路径> -p 10```
@@ -73,7 +78,7 @@ options:
   -t TARGET_PATH, --target-path TARGET_PATH
                         搜索敏感信息的文件路径或文件夹路径（例如：~/download/folder）
   -p PROCESS_NUMBER, --process-number PROCESS_NUMBER
-                        程序进程数（默认值：5）
+                        程序进程数（默认值：12）
   -c CONFIG_PATH, --config-path CONFIG_PATH
                         yaml 配置文件的路径（默认值：configs.yaml）
   -o OUTPUT_FORMAT, --output-format OUTPUT_FORMAT
@@ -82,7 +87,38 @@ options:
                         排除的文件，使用正则匹配（例如：\.DS_Store .*bin .*doc）
   -a, --is-re-all       每个文件的被单个正则表达式规则后退出匹配循环，或匹配所有正则表达式才退出匹配循环
   -s, --is-silent       静默模式：开启后，命令行不会输出命中的信息，会使用进度条来显示进度
+  -f, --re-filter       过滤正则，每行字符串匹配过程中命中该正则直接跳过该行
 ```
+
+### 应急响应用法与示例
+
+感谢网络安全的朋友给提出的建议，该工具也可用于常见的网络攻击特征快速匹配，复杂型网络攻击不适用，如POST请求体内的攻击、0DAY漏洞攻击、特殊网络路径攻击等，酌情使用。
+
+当用于网络安全应急响应时，可直接对中间件与应用日志目录进行扫描，以快速提取疑似攻击痕迹，因为应急特征匹配和敏感数据匹配思路还是有部分区别，这里使用单独的配置文件 `emergency.yaml` 避免匹配混乱。
+
++ 支持的常见攻击指纹分组（可在 `emergency.yaml` 的 `rules` 中调整）：
+  + SQL INJECTION
+  + COMMAND EXECUTION
+  + PATH TRAVERSAL / LFI-RFI
+  + SSRF
+  + XSS
+  + LOG4SHELL / JNDI
+  + WEBSHELL / MALICIOUS UPLOAD
+  + JAVA / PHP DESERIALIZATION
+  + NOSQL INJECTION
+  + SENSITIVE ACCESS
+
+示例：扫描 Nginx/Apache/Tomcat 应用日志目录，并输出所有可疑的攻击请求
+
+```bash
+python3 sensitive-helper.py -t /var/log/nginx -a -s -c emergency.yaml
+python3 sensitive-helper.py -t /var/log/httpd  -a -s -c emergency.yaml
+python3 sensitive-helper.py -t /opt/tomcat/logs -a -s -c emergency.yaml
+```
+
+建议：
++ 如需展开归档日志，可不排除压缩包（程序会尝试递归解压）。
++ 如日志量特别大，建议结合 `-s` 开启进度条，并合理调高 `-p` 进程数。
 
 ### 默认模式输出样例
 

@@ -1,6 +1,18 @@
+"""
+configurator.py
+
+通用配置加载与访问工具：支持 JSON/YAML/TOML 的加载、合并、保存与友好打印。
+
+组件：
+- BaseConfigurator: 基础配置容器，提供 get/set/loads/dumps/gen_pretty 等方法；
+- FileConfigurator: 在 BaseConfigurator 基础上增加从文件加载与保存；
+- new: 简易单例工厂，按 name 复用配置实例。
+"""
+
 import copy
 import json
 import os
+import pathlib
 from typing import Any, AnyStr, Dict, Iterable, List, Union
 
 import toml
@@ -10,6 +22,7 @@ _G_CFG = {}
 
 
 def maps_merge(*maps: Dict) -> Dict:
+    """深合并多个字典，返回新副本。后者覆盖前者。"""
     ret = copy.deepcopy(maps[0])
     for src in maps:
         map_merge(ret, src)
@@ -17,6 +30,7 @@ def maps_merge(*maps: Dict) -> Dict:
 
 
 def map_merge(dst: Dict, src: Dict):
+    """原地深合并 `src` 到 `dst`。嵌套字典递归合并，其它类型直接覆盖。"""
     for key, val in src.items():
         if isinstance(val, Dict):
             if not (key in dst and isinstance(dst[key], Dict)):
@@ -27,10 +41,13 @@ def map_merge(dst: Dict, src: Dict):
 
 
 class BaseConfigurator:
+    """基础配置容器，封装常用读写与序列化能力。"""
+
     def __init__(self, template: Dict = None):
         self.raw: Union[Dict, Any] = template or {}
 
-    def get(self, keys: AnyStr, _defult: Any = None, sep: AnyStr = '.'):
+    def get(self, keys: AnyStr, _defult: Any = None, sep: AnyStr = '.') -> Any:
+        """按分隔符路径获取值，不存在则返回 `_defult`。"""
         keys = keys.split(sep)
         point = self.raw
         is_found = True
@@ -42,6 +59,7 @@ class BaseConfigurator:
         return point if is_found else _defult
 
     def set(self, keys: AnyStr, value: Any, sep: AnyStr = '.'):
+        """按分隔符路径设置值，必要时自动创建中间层级。"""
         keys = keys.split(sep)
         point = self.raw
         for key in keys[:-1]:
@@ -51,6 +69,7 @@ class BaseConfigurator:
         point[keys[-1]] = value
 
     def loads(self, content: str, fmt: str = 'json', reload: bool = False):
+        """从文本加载配置，支持 json/yaml/toml；`reload=True` 时覆盖原始内容。"""
         if fmt == 'toml':
             object_config = toml.loads(content)
         elif fmt == 'yaml':
@@ -67,6 +86,7 @@ class BaseConfigurator:
         return self.raw
 
     def dumps(self, fmt: str = 'json'):
+        """将配置序列化为文本，支持 json/yaml/toml。"""
         if fmt == 'toml':
             content = toml.dumps(self.raw)
         elif fmt == 'yaml':
@@ -76,11 +96,16 @@ class BaseConfigurator:
         return content
 
     def exists(self, key: AnyStr):
-        if self.get(key):
-            return False
-        return True
+        """键是否存在。存在返回 True，否则 False。"""
+        return self.get(key) is not None
 
     def gen_pretty(self, objs: Iterable = None, depth: int = 3, filters: List[str] = None):
+        """生成简短可读的层次化预览字符串。
+
+        - depth: 控制递归深度；
+        - filters: 过滤掉特定路径（如 'rules'）。
+        """
+
         def gen_value(value, depth_next, parent_next):
             if isinstance(value, Dict):
                 value = '{{{}}}'.format(recursion_pretty(value, depth_next, parent_next))
@@ -121,6 +146,8 @@ class BaseConfigurator:
 
 
 class FileConfigurator(BaseConfigurator):
+    """带持久化能力的配置器，从文件加载/保存。"""
+
     def __init__(self, filepath: str = 'configs.json', template: Dict = None):
         self.filepath = filepath
         self.ext = self.filepath.split('.')[-1]
@@ -128,6 +155,7 @@ class FileConfigurator(BaseConfigurator):
         self.load()
 
     def load(self, strict: bool = False, quiet: bool = False) -> Union[Exception, Any]:
+        """从文件加载配置；找不到时返回异常对象或抛出异常（strict）。"""
         if not os.path.isfile(self.filepath):
             notice = 'could not find the file "{}", or is not a file.'.format(self.filepath)
             error = ValueError(notice)
@@ -136,15 +164,16 @@ class FileConfigurator(BaseConfigurator):
             if not quiet:
                 print(notice)
             return error
-        with open(self.filepath) as _f:
+        with open(self.filepath, encoding='utf-8') as _f:
             self.loads(_f.read(), self.ext)
         return None
 
     def save(self, exist_ok: bool = True):
+        """将当前配置写回文件，必要时创建目录。"""
         dirspath = self.filepath.split(os.sep)[:-1]
         if dirspath:
             os.makedirs(os.sep.join(dirspath), exist_ok=exist_ok)
-        with open(self.filepath, 'w') as _f:
+        with open(self.filepath, 'w', encoding='utf-8') as _f:
             text = self.dumps(self.ext)
             _f.write(text)
         return True
@@ -153,6 +182,7 @@ class FileConfigurator(BaseConfigurator):
 def new(
     name: str = '__DEFAULT__', base_class: Union[Any, FileConfigurator] = FileConfigurator, *args, **kwargs
 ) -> FileConfigurator:
+    """获取（或创建）名为 `name` 的配置单例实例。"""
     if name not in _G_CFG:
         _G_CFG[name] = base_class(*args, **kwargs)
     return _G_CFG[name]

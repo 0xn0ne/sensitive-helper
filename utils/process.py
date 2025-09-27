@@ -1,9 +1,21 @@
 #!/bin/python3
 # _*_ coding:utf-8 _*_
 #
-# process.py
-# 参考链接：https://segmentfault.com/a/1190000007495352
-# 多进程写法优化，多进程适用于CPU密集型、网络请求密集型任务。同时多进程模型也适用于多机分布式场景中，易于多机扩展。单任务CPU需求越大，网络请求操作次数越多，多线程越有优势。
+"""
+process.py
+
+进程池辅助工具：对 concurrent.futures.ProcessPoolExecutor 做轻量封装。
+
+功能：
+- submit_super: 提交任务并记录 future；
+- result_yield: 以生成器形式依次获取结果，获取后即从队列移除。
+
+适用场景：
+- CPU 密集或网络请求密集任务；
+- 可在多机分布式环境扩展。
+
+参考：`https://segmentfault.com/a/1190000007495352`
+"""
 
 import concurrent.futures
 import os
@@ -13,18 +25,21 @@ from typing import Any, Generator, List
 
 
 class ProcessPoolHelper(concurrent.futures.ProcessPoolExecutor):
+    """对 ProcessPoolExecutor 的简易封装，便于批量提交与顺序取回结果。"""
     def __init__(self, max_workers=None, mp_context=None, initializer=None, initargs=()):
         super().__init__(max_workers, mp_context, initializer, initargs)
         self.__job_list: List[concurrent.futures.Future] = []
 
     def submit_super(self, fn, /, *args, **kwargs) -> concurrent.futures.Future:
+        """提交任务并加入内部队列，返回 future。"""
         job = self.submit(fn, *args, **kwargs)
         self.__job_list.append(job)
         return job
 
     def result_yield(self, timeout: float = None) -> Generator[Any, None, None]:
-        """
-        获取任务执行的返回值，并将任务从队列中移除。在调用本函数时，调用点会进入阻塞状态。
+        """按提交顺序产出任务返回值；取出后从队列移除。
+
+        注意：调用方会阻塞直到有任务完成或超时。
         """
         self.__job_list.reverse()
         while self.__job_list:

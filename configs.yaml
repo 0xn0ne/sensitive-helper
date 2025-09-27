@@ -4,8 +4,9 @@ exclude_files:
 is_re_all: false
 is_silent: false
 output_format: csv
-process_number: 5
-row_split: "[\0-\x1F\x7F]+"
+process_number: 12
+re_filter: ''
+row_split: '[\n\r]+'
 rules:
   AKSK:
   - '[\s\n\''\"`=:#]LTAI\w{12,20}[\s\n\''\"`=:#]'
@@ -54,5 +55,5 @@ rules:
     - (adobe|amap|android|apache|bing|digicert|eclipse|freecodecamp|github|githubusercontent|gnu|godaddy|google|googlesource|youtube|youtu|jd|npmjs|microsoft|openxmlformats|outlook|mozilla|openssl|oracle|qq|spring|sun|umang|w3|wikipedia|xml)\.(org|com|cn|net|edu|io|be)
     - (ali|baidu|cdn|example|ssh|ssl)[\w-]*\.(org|com|cn|net|edu|io)
     regexp:
-    - (ftp|https?):\/\/[%.\w\-]+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?
+    - (ftp|https?):\/\/[%\.\w\-]+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?
 target_path: ''
