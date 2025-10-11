@@ -1,153 +1,153 @@
 # 应急排查专用配置
 config_path: emergency.yaml
 exclude_files:
-- \.DS_Store
+  - \.DS_Store
 is_re_all: true
 is_silent: false
 output_format: csv
 process_number: 18
-re_filter: '\s+(3\d\d|4\d\d|5\d\d)\s+'
-row_split: '[\0-\x1F\x7F]+'
+re_filter_content: '\s+(3\d\d|4\d\d|5\d\d)\s+'
+row_split: '[\n\r]+'
 rules:
   AKSK:
-  - '[\s\n\''\"`=:#]LTAI\w{12,20}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#](A3T[A-Z0-9]|ABIA|ACCA|AGPA|AIDA|AIPA|AKIA|ANPA|ANVA|APKA|AROA|ASCA|ASIA)[0-9A-Z]{16}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]GOOG\w{10,30}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]AZ[A-Za-z0-9]{34,40}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]IBM[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#][a-zA-Z0-9]{8}(-[a-zA-Z0-9]{4}){3}-[a-zA-Z0-9]{12}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]OCID[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]LTAI[A-Za-z0-9]{12,20}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]AKID[A-Za-z0-9]{13,20}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]AK[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]JDC_[A-Z0-9]{28,32}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]AKLT[a-zA-Z0-9-_]{0,252}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]UC[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]QY[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]AKLT[a-zA-Z0-9-_]{16,28}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]LTC[A-Za-z0-9]{10,60}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]YD[A-Za-z0-9]{10,60}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]CTC[A-Za-z0-9]{10,60}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]YYT[A-Za-z0-9]{10,60}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]YY[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]CI[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]gcore[A-Za-z0-9]{10,30}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]LTAI\w{12,20}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#](A3T[A-Z0-9]|ABIA|ACCA|AGPA|AIDA|AIPA|AKIA|ANPA|ANVA|APKA|AROA|ASCA|ASIA)[0-9A-Z]{16}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]GOOG\w{10,30}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]AZ[A-Za-z0-9]{34,40}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]IBM[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#][a-zA-Z0-9]{8}(-[a-zA-Z0-9]{4}){3}-[a-zA-Z0-9]{12}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]OCID[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]LTAI[A-Za-z0-9]{12,20}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]AKID[A-Za-z0-9]{13,20}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]AK[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]JDC_[A-Z0-9]{28,32}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]AKLT[a-zA-Z0-9-_]{0,252}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]UC[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]QY[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]AKLT[a-zA-Z0-9-_]{16,28}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]LTC[A-Za-z0-9]{10,60}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]YD[A-Za-z0-9]{10,60}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]CTC[A-Za-z0-9]{10,60}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]YYT[A-Za-z0-9]{10,60}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]YY[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]CI[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]gcore[A-Za-z0-9]{10,30}[\s\n\''\"`=:#]'
   JSON WEB TOKEN(JWT):
-  - ey[0-9a-zA-Z/+]{4,}={,2}\.[0-9a-zA-Z/+]{6,}={,2}\.[A-Za-z0-9-_]+
+    - ey[0-9a-zA-Z/+]{4,}={,2}\.[0-9a-zA-Z/+]{6,}={,2}\.[A-Za-z0-9-_]+
   SQL INJECTION:
     flags: I
     regexp:
-    - '.+[?/\;&]%[\da-f]{2}\S*(substring|concat|union|select|sleep|char\(|delay|information_schema|updatexml|extractvalue|load_file|outfile|into|xp_cmdshell)\S+%[\da-f]{2}'
-    - '.+[?/\;&]%[\da-f]{2}\S*(or|and)\S{,30}=\S{,6}%[\da-f]{2}'
+      - '.+[?/\;&]%[\da-f]{2}\S*(substring|concat|union|select|sleep|char\(|delay|information_schema|updatexml|extractvalue|load_file|outfile|into|xp_cmdshell|waitfor)\S+%[\da-f]{2}'
+      - '.+[?/\;&]%[\da-f]{2}\S*(or|and)\S{,30}=\S{,6}%[\da-f]{2}'
   COMMAND EXECUTION:
     flags: I
     regexp:
-    - '.+[?/\\;&]%[\da-f]{2}\S*(bash|zsh|cmd|powershell|pwsh|python|perl|wget|curl|netcat|telnet|whoami|uname|net.{1,6}user|ipconfig|ifconfig|shutdown)\S*%[\da-f]{2}'
+      - '.+[?/\\;&]%[\da-f]{2}\S*(bash|zsh|cmd|powershell|pwsh|python|perl|wget|curl|netcat|telnet|whoami|uname|net.{1,6}user|ipconfig|ifconfig|shutdown)\S*%[\da-f]{2}'
   PATH TRAVERSAL / LFI-RFI:
     flags: I
     regexp:
-    - .+/\S+?(\.\./|\.\.\\)+/\S+
-    - .+/\S+?(etc/passwd|proc/self|windows/system32)
-    - .+(php|file|zip|data|expect)://
-    - .+(include|require)(_once).+
+      - .+/\S+?(\.\./|\.\.\\)+/\S+
+      - .+/\S+?(etc/passwd|proc/self|windows/system32)
+      - .+(php|file|zip|data|expect)://
+      - .+(include|require)(_once).+
   SSRF:
     flags: I
     regexp:
-    - .+(http|https|gopher|dict|file)://([1-2]?\d{1,2}\.[1-2]?\d{1,2}\.[1-2]?\d{,2}\.[1-2]?\d{,2}|localhost|::1)([:/])
-    - .+dnslog\.\S+
+      - \S{3,}(http|https|gopher|dict|file)://([1-2]?\d{1,2}\.[1-2]?\d{1,2}\.[1-2]?\d{,2}\.[1-2]?\d{,2}|localhost|::1)([:/])
+      - \S{3,}dnslog\.\S+
   XSS:
     flags: I
     regexp:
-    - \S+<\S*(script|iframe|svg)\S*>\S+
-    - on(error|load|mouseover|focus|click)\s*=\S+
-    - \S+(javascript:.+|document\.cookie|localStorage|sessionStorage)\S+
+      - \S+<\S*(script|iframe|svg)\S*>\S+
+      - on(error|load|mouseover|focus|click)\s*=\S+
+      - \S+(javascript:.+|document\.cookie|localStorage|sessionStorage)\S+
   LOG4J / JNDI:
     flags: I
     regexp:
-    - \S+\$\{\S{,6}(jndi\s*:\s*|ldaps?|rmi|dns)\S+
+      - \S+\$\{\S{,6}(jndi\s*:\s*|ldaps?|rmi|dns)\S+
   WEBSHELL:
     flags: I
     regexp:
-    - .+(assert|eval|system|shell_exec|passthru|base64_decode).+$_(POST|REQUEST)
-    - .+preg_replace\s*\(.*?/e
+      - .+(assert|eval|system|shell_exec|passthru|base64_decode).+$_(POST|REQUEST)
+      - .+preg_replace\s*\(.*?/e
   JAVA / PHP DESERIALIZATION:
     flags: I
     regexp:
-    - .+java\.io\.Object(Input|Output)Stream
-    - .+(org\.apache\.commons\.collections\.|InvalidClassException|StreamCorruptedException)
+      - .+java\.io\.Object(Input|Output)Stream
+      - .+(org\.apache\.commons\.collections\.|InvalidClassException|StreamCorruptedException)
   NOSQL INJECTION:
     flags: I
     regexp:
-    - .+(\$ne|\$gt|\$gte|\$lt|\$lte|\$where)\s*[:=]
-    - .+db\.[a-zA-Z0-9_]+\.find\(.*\$where
+      - .+(\$ne|\$gt|\$gte|\$lt|\$lte|\$where)\s*[:=]
+      - .+db\.[a-zA-Z0-9_]+\.find\(.*\$where
   SENSITIVE ACCESS:
     flags: I
     regexp:
-    - .+'/\S+(/\.git|/\.svn|/swagger)/\S+'
-    - .+'/\S+\.(zip|rar|tar|gz)\S*'
+      - .+'/\S+(/\.git|/\.svn|/swagger)/\S+'
+      - .+'/\S+\.(zip|rar|tar|gz)\S*'
   # Common framework
   STRUTS2 / OGNL:
     flags: I
     regexp:
-    - .+'%\{[#$].+?\}'
-    - .+(redirect|action|method)\s*:.+
+      - .+'%\{[#$].+?\}'
+      - .+(redirect|action|method)\s*:.+
   IIS:
     flags: I
     regexp:
-    - '.+\.asp.{,3};.{,3}\.[a-z]{2,3}'
+      - '.+\.asp.{,3};.{,3}\.[a-z]{2,3}'
   COMPONENT PATHS:
     flags: I
     regexp:
-    # WebLogic 常见
-    - .+(/wls-wsat/\w+|/uddiexplorer/\w+\.jsp|/ws_utc/\w+\.do|/console/jsp/common/\w+\.jsp|/bea_wls_deployment_internal|/wls-wsat/CoordinatorPortType)
-    - '.+/console/(images|css|help|portal)/'
-    # Spring Boot / Actuator
-    - .+(/actuator|/heapdump)
-    # ActiveMQ
-    # GitLab
-    - .+(/users/password|/-/graphql|/import/gitlab_project)
-    # Microsoft SharePoint
-    - '.+/_layouts/15/ToolPane.aspx'
-    # Jenkins / JBoss / Struts / Nexus / Solr 等
-    - .+(/jmx-console|/invoker/JMXInvokerServlet|/struts2-showcase|/service/extdirect|/service/rest|/solr/admin|/solr/select)
-    # ===== 国产常见系统（指纹示例，需按环境取舍） =====
-    # JeecgBoot
-    - .+(/sys/common/upload|/getDictItemsByTable|/onlDragDatasetHead/getTotalData|/novat-boot/sys/user/passwordChange)
-    # 若依 RuoYi
-    - .+(/ruoyi-admin|/common/upload|/system/user/profile/resetPwd|/sendMessageWithAttachment)
-    # 帆软 FineReport
-    - .+(/webroot/decision/|/decision/login)
-    - '.+/WebReport/ReportServer.*cmd=design_install_reufile'
-    # 泛微 E-cology / Weaver
-    - .+(/interface/outter/outter_encryptclassOperation.jsp|/api/workflow/reqform/remarkOperate|/plugins/jqueryFileTree/connectors/jqueryFileTree.jsp|/weaver/weaver.email.FileDownloadLocation/login|/mobile/browser/WorkflowCenterTreeData.jsp|/weaver/ln.FileDownload|/weaver/ln.FileUpload|/weaver/weaver.file.FileDownload|/api/integration/datasource/update)
-    - '.+/mobilemode/mobile/server.jsp.+invoker=com.api.mobilemode.web.mobile.service.MobileEntranceAction'
-    # 致远 Seeyon
-    - .+(/seeyon/management/index.jsp|/seeyon/ajax.do|/seeyon/htmlofficeservlet|/seeyon/fileUpload.do)
-    # 蓝凌 Landray
-    - .+(/ekp/data/sys-common/dataxml.tmpl|/app/login.jsp|/data/sys-common|/sys/ui/extend/varkind/custom.jsp)
-    # 用友 Yonyou / NC / BIP / EF
-    - .+(/nc.itf.bap.service.IBapIOService|/ebvp/register/qrySubPurchaseOrgByParentPk|/portal/pt/servlet/getFormltem/doPost|/service/FileManageServlet|/bi/api/SemanticModel/GetOlapConnectionList|/uap.pubitf.ae.meta.IMetaWebService4BqCloud|/portal/pt/oacoSchedulerEvents/changeEvent|/ServiceDispatcherServlet)
-    - .+/com.ufida.web.action.ActionServlet.+repID=.+
-    - .+/Portal/Print/DynamaticExport.aspx.+filePath=.+
-    - .+/worksheet/workslist.jsp.+id=.+
-    # 金蝶 Kingdee / K3Cloud
-    - (/Kingdee.BOS.WebApi.ServicesStub|/CommonFileServer/Upload)
-    # 通达 Tongda OA
-    - .+(/general/login_code.php|/ispirit/login_code.php|/get_contactlist.php)
-    # 群晖 Synology
-    - .+(/webapi/auth.cgi|/webman/index.cgi)
-    # 深信服 Sangfor（VPN/NGAF 端口差异较大，按需取舍）
-    - .+(/fort/portal_login|/tool/log/c.php|/netConfig/set_port)
-    # 联软
-    - .+(/emm-core/oauth/token)
-    # 明源
-    - '/PubPlatform/nav/login/sso/login.aspx'
-    # 汉王E脸通
-    - .+(/manage/mobiVist.+/systemBlackList/uploadBlackListFile.do|/doorInfo/queryDoorInfoList.do.+order=|/manage/antisubmarine/queryAntisubmarineList.do.+order=|/manage/resourceUpload/imgDownload.do.+filePath=|/manage/intercom/.+/firstPeopleOpen/getDoors.do.+order=|/manage/authMultiplePeople/getGroupEmployee.do.+order=|/manage/visitorMapConfig/updateVisitorMapConfig.do|/manage/intercom/.+/resourceUpload/upload.do|/manage/leaveList/monadFileUpload.do)
-    # 扁鹊医疗
-    - .+(/WebServiceForFirstaidApp.asmx/GetMonitorList|/WebServiceForFirstaidApp.asmx/GetLyfsByParams)
-    # 时空智友ERP
-    - .+'/formservice.*service=updater.uploadStudioFile'
-    - .+'/formservice.*(service=attachment.write|filename=)'
+      # WebLogic 常见
+      - .+(/wls-wsat/\w+|/uddiexplorer/\w+\.jsp|/ws_utc/\w+\.do|/console/jsp/common/\w+\.jsp|/bea_wls_deployment_internal|/wls-wsat/CoordinatorPortType)
+      - ".+/console/(images|css|help|portal)/"
+      # Spring Boot / Actuator
+      - .+(/actuator|/heapdump)
+      # ActiveMQ
+      # GitLab
+      - .+(/users/password|/-/graphql|/import/gitlab_project)
+      # Microsoft SharePoint
+      - ".+/_layouts/15/ToolPane.aspx"
+      # Jenkins / JBoss / Struts / Nexus / Solr 等
+      - .+(/jmx-console|/invoker/JMXInvokerServlet|/struts2-showcase|/service/extdirect|/service/rest|/solr/admin|/solr/select)
+      # ===== 国产常见系统（指纹示例，需按环境取舍） =====
+      # JeecgBoot
+      - .+(/sys/common/upload|/getDictItemsByTable|/onlDragDatasetHead/getTotalData|/novat-boot/sys/user/passwordChange)
+      # 若依 RuoYi
+      - .+(/ruoyi-admin|/common/upload|/system/user/profile/resetPwd|/sendMessageWithAttachment)
+      # 帆软 FineReport
+      - .+(/webroot/decision/|/decision/login)
+      - ".+/WebReport/ReportServer.*cmd=design_install_reufile"
+      # 泛微 E-cology / Weaver
+      - .+(/interface/outter/outter_encryptclassOperation.jsp|/api/workflow/reqform/remarkOperate|/plugins/jqueryFileTree/connectors/jqueryFileTree.jsp|/weaver/weaver.email.FileDownloadLocation/login|/mobile/browser/WorkflowCenterTreeData.jsp|/weaver/ln.FileDownload|/weaver/ln.FileUpload|/weaver/weaver.file.FileDownload|/api/integration/datasource/update)
+      - ".+/mobilemode/mobile/server.jsp.+invoker=com.api.mobilemode.web.mobile.service.MobileEntranceAction"
+      # 致远 Seeyon
+      - .+(/seeyon/management/index.jsp|/seeyon/ajax.do|/seeyon/htmlofficeservlet|/seeyon/fileUpload.do)
+      # 蓝凌 Landray
+      - .+(/ekp/data/sys-common/dataxml.tmpl|/app/login.jsp|/data/sys-common|/sys/ui/extend/varkind/custom.jsp)
+      # 用友 Yonyou / NC / BIP / EF
+      - .+(/nc.itf.bap.service.IBapIOService|/ebvp/register/qrySubPurchaseOrgByParentPk|/portal/pt/servlet/getFormltem/doPost|/service/FileManageServlet|/bi/api/SemanticModel/GetOlapConnectionList|/uap.pubitf.ae.meta.IMetaWebService4BqCloud|/portal/pt/oacoSchedulerEvents/changeEvent|/ServiceDispatcherServlet)
+      - .+/com.ufida.web.action.ActionServlet.+repID=.+
+      - .+/Portal/Print/DynamaticExport.aspx.+filePath=.+
+      - .+/worksheet/workslist.jsp.+id=.+
+      # 金蝶 Kingdee / K3Cloud
+      - (/Kingdee.BOS.WebApi.ServicesStub|/CommonFileServer/Upload)
+      # 通达 Tongda OA
+      - .+(/general/login_code.php|/ispirit/login_code.php|/get_contactlist.php)
+      # 群晖 Synology
+      - .+(/webapi/auth.cgi|/webman/index.cgi)
+      # 深信服 Sangfor（VPN/NGAF 端口差异较大，按需取舍）
+      - .+(/fort/portal_login|/tool/log/c.php|/netConfig/set_port)
+      # 联软
+      - .+(/emm-core/oauth/token)
+      # 明源
+      - "/PubPlatform/nav/login/sso/login.aspx"
+      # 汉王E脸通
+      - .+(/manage/mobiVist.+/systemBlackList/uploadBlackListFile.do|/doorInfo/queryDoorInfoList.do.+order=|/manage/antisubmarine/queryAntisubmarineList.do.+order=|/manage/resourceUpload/imgDownload.do.+filePath=|/manage/intercom/.+/firstPeopleOpen/getDoors.do.+order=|/manage/authMultiplePeople/getGroupEmployee.do.+order=|/manage/visitorMapConfig/updateVisitorMapConfig.do|/manage/intercom/.+/resourceUpload/upload.do|/manage/leaveList/monadFileUpload.do)
+      # 扁鹊医疗
+      - .+(/WebServiceForFirstaidApp.asmx/GetMonitorList|/WebServiceForFirstaidApp.asmx/GetLyfsByParams)
+      # 时空智友ERP
+      - .+'/formservice.*service=updater.uploadStudioFile'
+      - .+'/formservice.*(service=attachment.write|filename=)'
     # 联想/绿盟/金和/明源/大华/浪潮云/华测/Unibox/Richmail/PWS/Letta 待手机
-target_path: ''
+target_path: ""

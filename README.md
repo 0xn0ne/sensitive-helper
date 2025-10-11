@@ -62,32 +62,33 @@ pip3 install -r requirements.txt
 
 ```
 $ python3 sensitive-helper.py -h                                  
-usage: sensitive-helper.py [-h] -t TARGET_PATH [-p PROCESS_NUMBER] [-c CONFIG_PATH] [-o OUTPUT_FORMAT] [-e EXCLUDE_FILES [EXCLUDE_FILES ...]] [-a] [-s]
+usage: sensitive-helper.py [-h] [-t TARGET_PATH] [-p PROCESS_NUMBER] [-c CONFIG_PATH] [-o OUTPUT_FORMAT] [-e EXCLUDE_FILES [EXCLUDE_FILES ...]] [-a] [-s] [-r RE_FILTER_CONTENT]
 
     ███████╗███████╗███╗   ██╗███████╗██╗████████╗██╗██╗   ██╗███████╗
     ██╔════╝██╔════╝████╗  ██║██╔════╝██║╚══██╔══╝██║██║   ██║██╔════╝
-    ███████╗█████╗  ██╔██╗ ██║███████╗██║   ██║   ██║██║   ██║█████╗  
-    ╚════██║██╔══╝  ██║╚██╗██║╚════██║██║   ██║   ██║╚██╗ ██╔╝██╔══╝  
+    ███████╗█████╗  ██╔██╗ ██║███████╗██║   ██║   ██║██║   ██║█████╗
+    ╚════██║██╔══╝  ██║╚██╗██║╚════██║██║   ██║   ██║╚██╗ ██╔╝██╔══╝
     ███████║███████╗██║ ╚████║███████║██║   ██║   ██║ ╚████╔╝ ███████╗
     ╚══════╝╚══════╝╚═╝  ╚═══╝╚══════╝╚═╝   ╚═╝   ╚═╝  ╚═══╝  ╚══════╝
-    v0.1.3
+    v0.1.6
     by 0xn0ne, https://github.com/0xn0ne/sensitive-helper
 
 options:
   -h, --help            显示帮助信息并退出程序
-  -t TARGET_PATH, --target-path TARGET_PATH
+  -t, --target-path TARGET_PATH
                         搜索敏感信息的文件路径或文件夹路径（例如：~/download/folder）
-  -p PROCESS_NUMBER, --process-number PROCESS_NUMBER
+  -p, --process-number PROCESS_NUMBER
                         程序进程数（默认值：12）
-  -c CONFIG_PATH, --config-path CONFIG_PATH
+  -c, --config-path CONFIG_PATH
                         yaml 配置文件的路径（默认值：configs.yaml）
-  -o OUTPUT_FORMAT, --output-format OUTPUT_FORMAT
+  -o, --output-format OUTPUT_FORMAT
                         输出文件格式，可用格式为 json、csv（默认值：csv）
-  -e EXCLUDE_FILES [EXCLUDE_FILES ...], --exclude-files EXCLUDE_FILES [EXCLUDE_FILES ...]
+  -e, --exclude-files EXCLUDE_FILES [EXCLUDE_FILES ...]
                         排除的文件，使用正则匹配（例如：\.DS_Store .*bin .*doc）
   -a, --is-re-all       每个文件的被单个正则表达式规则后退出匹配循环，或匹配所有正则表达式才退出匹配循环
   -s, --is-silent       静默模式：开启后，命令行不会输出命中的信息，会使用进度条来显示进度
-  -f, --re-filter       过滤正则，每行字符串匹配过程中命中该正则直接跳过该行
+  -r, --re-filter-content RE_FILTER_CONTENT
+                        过滤正则，每行字符串匹配过程中命中该正则直接跳过该行
 ```
 
 ### 应急响应用法与示例
@@ -117,6 +118,7 @@ python3 sensitive-helper.py -t /opt/tomcat/logs -a -s -c emergency.yaml
 ```
 
 建议：
+
 + 如需展开归档日志，可不排除压缩包（程序会尝试递归解压）。
 + 如日志量特别大，建议结合 `-s` 开启进度条，并合理调高 `-p` 进程数。
 

@@ -1,59 +1,59 @@
 config_path: config.yaml
 exclude_files:
-- \.DS_Store
-is_re_all: false
+  - \.DS_Store
+is_re_all: true
 is_silent: false
 output_format: csv
 process_number: 12
-re_filter: ''
-row_split: '[\n\r]+'
+re_filter_content: ""
+row_split: '[\0-\x1F\x7F]+'
 rules:
   AKSK:
-  - '[\s\n\''\"`=:#]LTAI\w{12,20}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#](A3T[A-Z0-9]|ABIA|ACCA|AGPA|AIDA|AIPA|AKIA|ANPA|ANVA|APKA|AROA|ASCA|ASIA)[0-9A-Z]{16}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]GOOG\w{10,30}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]AZ[A-Za-z0-9]{34,40}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]IBM[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#][a-zA-Z0-9]{8}(-[a-zA-Z0-9]{4}){3}-[a-zA-Z0-9]{12}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]OCID[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]LTAI[A-Za-z0-9]{12,20}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]AKID[A-Za-z0-9]{13,20}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]AK[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]JDC_[A-Z0-9]{28,32}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]AKLT[a-zA-Z0-9-_]{0,252}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]UC[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]QY[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]AKLT[a-zA-Z0-9-_]{16,28}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]LTC[A-Za-z0-9]{10,60}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]YD[A-Za-z0-9]{10,60}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]CTC[A-Za-z0-9]{10,60}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]YYT[A-Za-z0-9]{10,60}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]YY[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]CI[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
-  - '[\s\n\''\"`=:#]gcore[A-Za-z0-9]{10,30}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]LTAI\w{12,20}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#](A3T[A-Z0-9]|ABIA|ACCA|AGPA|AIDA|AIPA|AKIA|ANPA|ANVA|APKA|AROA|ASCA|ASIA)[0-9A-Z]{16}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]GOOG\w{10,30}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]AZ[A-Za-z0-9]{34,40}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]IBM[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#][a-zA-Z0-9]{8}(-[a-zA-Z0-9]{4}){3}-[a-zA-Z0-9]{12}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]OCID[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]LTAI[A-Za-z0-9]{12,20}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]AKID[A-Za-z0-9]{13,20}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]AK[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]JDC_[A-Z0-9]{28,32}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]AKLT[a-zA-Z0-9-_]{0,252}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]UC[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]QY[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]AKLT[a-zA-Z0-9-_]{16,28}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]LTC[A-Za-z0-9]{10,60}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]YD[A-Za-z0-9]{10,60}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]CTC[A-Za-z0-9]{10,60}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]YYT[A-Za-z0-9]{10,60}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]YY[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]CI[A-Za-z0-9]{10,40}[\s\n\''\"`=:#]'
+    - '[\s\n\''\"`=:#]gcore[A-Za-z0-9]{10,30}[\s\n\''\"`=:#]'
   BASE64:
-  - '[0-9a-zA-Z/+]{8,}={,2}'
+    - "[0-9a-zA-Z/+]{8,}={,2}"
   EMAIL:
-  - '[a-zA-Z0-9][-+.\w]{1,127}@([a-zA-Z0-9][-a-zA-Z0-9]{0,63}.){,3}(org|com|cn|net|edu|mail)'
+    - '[a-zA-Z0-9][-+.\w]{1,127}@([a-zA-Z0-9][-a-zA-Z0-9]{0,63}.){,3}(org|com|cn|net|edu|mail)'
   FILE PATH:
     flags: I|X
     re_filters: []
     regexp:
-    - ([a-z]:\\)?([\\/])(users?|windows?|program files(\(x\d{2,3}\))?|s?bin|etc|usr|boot|dev|home|proc|opt|sys|srv|var)(\2[.\w!#\(~\[\{][.\w!#&\(\)+=~\[\]\{\}\s]{2,63}){1,16}
+      - ([a-z]:\\)?([\\/])(users?|windows?|program files(\(x\d{2,3}\))?|s?bin|etc|usr|boot|dev|home|proc|opt|sys|srv|var)(\2[.\w!#\(~\[\{][.\w!#&\(\)+=~\[\]\{\}\s]{2,63}){1,16}
   FUZZY MATCH:
     flags: I
     regexp:
-    - (APP|ACCESS|USER|PASS|OSS|ECS|CVM|AWS)[\w]{,8}(NAME|ID|KEY|NUM|ENC|CODE|SEC|WORD)[\w]{,16}["\'`]?\s*[=:(\{\[]\s*["\'`][\x20-\x7F]{,128}?[\'"`]
-    - (USR|PWD|COOKIE)[_\-A-Z][\w]{,16}["\'`]?\s*[=:(\{\[]\s*["\'`][\x20-\x7F]{,128}?[\'"`]
-    - (SECRET|SIGN|TOKEN)[\w]{,16}["\'`]?\s*[=:(\{\[]\s*["\'`][\x20-\x7F]{,128}?[\'"`]
+      - (APP|ACCESS|USER|PASS|OSS|ECS|CVM|AWS)[\w]{,8}(NAME|ID|KEY|NUM|ENC|CODE|SEC|WORD)[\w]{,16}["\'`]?\s*[=:(\{\[]\s*["\'`][\x20-\x7F]{,128}?[\'"`]
+      - (USR|PWD|COOKIE)[_\-A-Z][\w]{,16}["\'`]?\s*[=:(\{\[]\s*["\'`][\x20-\x7F]{,128}?[\'"`]
+      - (SECRET|SIGN|TOKEN)[\w]{,16}["\'`]?\s*[=:(\{\[]\s*["\'`][\x20-\x7F]{,128}?[\'"`]
   JSON WEB TOKEN(JWT):
-  - ey[0-9a-zA-Z/+]{4,}={,2}\.[0-9a-zA-Z/+]{6,}={,2}\.[A-Za-z0-9-_]+
+    - ey[0-9a-zA-Z/+]{4,}={,2}\.[0-9a-zA-Z/+]{6,}={,2}\.[A-Za-z0-9-_]+
   PHONE:
-  - (13[0-9]|14[5-9]|15[0-3,5-9]|16[6]|17[0-8]|18[0-9]|19[8,9])\d{8}
+    - (13[0-9]|14[5-9]|15[0-3,5-9]|16[6]|17[0-8]|18[0-9]|19[8,9])\d{8}
   URL:
     re_filters:
-    - (adobe|amap|android|apache|bing|digicert|eclipse|freecodecamp|github|githubusercontent|gnu|godaddy|google|googlesource|youtube|youtu|jd|npmjs|microsoft|openxmlformats|outlook|mozilla|openssl|oracle|qq|spring|sun|umang|w3|wikipedia|xml)\.(org|com|cn|net|edu|io|be)
-    - (ali|baidu|cdn|example|ssh|ssl)[\w-]*\.(org|com|cn|net|edu|io)
+      - (adobe|amap|android|apache|bing|digicert|eclipse|freecodecamp|github|githubusercontent|gnu|godaddy|google|googlesource|youtube|youtu|jd|npmjs|microsoft|openxmlformats|outlook|mozilla|openssl|oracle|qq|spring|sun|umang|w3|wikipedia|xml)\.(org|com|cn|net|edu|io|be)
+      - (ali|baidu|cdn|example|ssh|ssl)[\w-]*\.(org|com|cn|net|edu|io)
     regexp:
-    - (ftp|https?):\/\/[%\.\w\-]+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?
-target_path: ''
+      - (ftp|https?):\/\/[%\.\w\-]+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?
+target_path: ""

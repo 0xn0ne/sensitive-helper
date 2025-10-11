@@ -28,18 +28,18 @@ import py7zr
 import rarfile
 
 
-def zip_info(file_path: pathlib.Path) -> Dict[str, Any]:
+def get_zip_info(file_path: pathlib.Path) -> Dict[str, Any]:
     """读取 zip 文件头信息，返回是否为 zip 及压缩方式。"""
-    ret = {'is_magic': False, 'compression': -1}
+    ret = {'is_zip': False, 'compression': -1}
     with open(file_path, 'rb') as _f:
         byte_info = _f.read(30)
-        ret['is_magic'] = byte_info[:4] == b'PK\x03\x04'
+        ret['is_zip'] = byte_info[:4] == b'PK\x03\x04'
         ret['compression'] = int.from_bytes(byte_info[8:10], 'little')
     return ret
 
 
 def uncompress_zip(
-    file_path: Union[pathlib.Path, str], extract_dir: Union[pathlib.Path, str] = None, is_error: bool = True
+    file_path: Union[pathlib.Path, str], extract_dir: Union[pathlib.Path, str] = '', compression: int = 0
 ) -> Union[pathlib.Path, Any]:
     """解压 zip 文件到 `extract_dir`。自动使用本地头中的压缩方式。"""
     if isinstance(file_path, str):
@@ -49,11 +49,10 @@ def uncompress_zip(
     if isinstance(extract_dir, str):
         extract_dir = pathlib.Path(extract_dir)
 
-    file_info = zip_info(file_path)
     # extract_dir = extract_dir.joinpath(file_path.name)
     extract_dir.mkdir(parents=True, exist_ok=True)
 
-    with zipfile.ZipFile(file_path, 'r', compression=file_info['compression']) as _f:
+    with zipfile.ZipFile(file_path, 'r', compression=compression) as _f:
         for extr_name in _f.namelist():
             _f.extract(extr_name, extract_dir.__str__())
             extract_dir.joinpath(extr_name).rename(extract_dir.joinpath(extr_name.encode('cp437').decode('gbk')))
@@ -69,7 +68,7 @@ def is_tar(file_path: pathlib.Path):
 
 
 def uncompress_tar(
-    file_path: Union[pathlib.Path, str], extract_dir: Union[pathlib.Path, str] = None
+    file_path: Union[pathlib.Path, str], extract_dir: Union[pathlib.Path, str] = ''
 ) -> Union[pathlib.Path, Any]:
     """解包 tar/tar.* 文件到 `extract_dir`。"""
     if isinstance(file_path, str):
@@ -92,13 +91,13 @@ def uncompress_tar(
 def is_gz(file_path: pathlib.Path):
     """通过魔数判断是否为 gzip 文件。"""
     with open(file_path, 'rb') as _f:
-        if _f.read(2) == b'\x1F\x8B':
+        if _f.read(2) == b'\x1f\x8b':
             return True
     return False
 
 
 def uncompress_gz(
-    file_path: Union[pathlib.Path, str], extract_dir: Union[pathlib.Path, str] = None
+    file_path: Union[pathlib.Path, str], extract_dir: Union[pathlib.Path, str] = ''
 ) -> Union[pathlib.Path, Any]:
     """解压 gzip 文件；若内部为 tar 则继续调用 tar 解包。"""
     if isinstance(file_path, str):
@@ -123,13 +122,13 @@ def uncompress_gz(
 def is_7z(file_path: pathlib.Path):
     """通过魔数判断是否为 7z 文件。"""
     with open(file_path, 'rb') as _f:
-        if _f.read(6) == b'7z\xBC\xAF\x27\x1C':
+        if _f.read(6) == b'7z\xbc\xaf\x27\x1c':
             return True
     return False
 
 
 def uncompress_7z(
-    file_path: Union[pathlib.Path, str], extract_dir: Union[pathlib.Path, str] = None
+    file_path: Union[pathlib.Path, str], extract_dir: Union[pathlib.Path, str] = ''
 ) -> Union[pathlib.Path, Any]:
     """解压 7z 文件到 `extract_dir`。"""
     if isinstance(file_path, str):
@@ -155,7 +154,7 @@ def is_rar(file_path: pathlib.Path):
 
 
 def uncompress_rar(
-    file_path: Union[pathlib.Path, str], extract_dir: Union[pathlib.Path, str] = None
+    file_path: Union[pathlib.Path, str], extract_dir: Union[pathlib.Path, str] = ''
 ) -> Union[pathlib.Path, Any]:
     """
     解压 rar 文件在 windows 上需要安装 winrar，并配置好环境变量；linux 上需要安装 unrar，并配置好环境变量
@@ -180,14 +179,14 @@ def uncompress_rar(
 def is_bz(file_path: pathlib.Path):
     """通过魔数判断是否为 bzip2 文件。"""
     with open(file_path, 'rb') as _f:
-        if _f.read(2) == b'\x42\x5A\x68':
+        if _f.read(2) == b'\x42\x5a\x68':
             return True
     return False
 
 
 def uncompress(
     file_path: Union[pathlib.Path, str],
-    extract_dir: Union[pathlib.Path, str] = None,
+    extract_dir: Union[pathlib.Path, str] = '',
     is_error: bool = True,
     is_recursive: bool = False,
     max_level=64,
@@ -210,9 +209,9 @@ def uncompress(
         return
 
     ret = None
-    file_info = zip_info(file_path)
-    if file_info['is_magic']:
-        ret = uncompress_zip(file_path, extract_dir)
+    file_info = get_zip_info(file_path)
+    if file_info['is_zip']:
+        ret = uncompress_zip(file_path, extract_dir, file_info['compression'])
     elif is_gz(file_path):
         ret = uncompress_gz(file_path, extract_dir)
     elif is_tar(file_path):
@@ -225,8 +224,8 @@ def uncompress(
         raise ValueError('{} is not a compressed file.'.format(file_path))
 
     if is_recursive and ret and max_level > 0:
-        for file_path in ret.glob('**/*'):
-            uncompress(file_path, ret.joinpath('un_' + file_path.name), is_error, is_recursive, max_level - 1)
+        for it in ret.glob('**/*'):
+            uncompress(it, ret.joinpath('un_' + it.name), is_error, is_recursive, max_level - 1)
     return ret
 
 

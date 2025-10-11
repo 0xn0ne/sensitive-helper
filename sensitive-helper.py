@@ -44,11 +44,7 @@ def log_run_times(func):
         if total_time <= 1:
             return ret
         with open("run_times.log", "a") as _f:
-            _f.write(
-                "total time(s): {}, args: {}\n".format(
-                    time.time() - s_time, args[0][:127]
-                )
-            )
+            _f.write("total time(s): {}, args: {}\n".format(time.time() - s_time, args[0][:127]))
         return ret
 
     return wrapper
@@ -95,7 +91,7 @@ def is_filter_base64(result: AnyStr):
 def is_filter_jwt(result: AnyStr):
     """快速校验 JWT 结构是否符合 Base64 块长度要求（粗筛）。"""
     times = 0
-    res_split = result.split(b".")
+    res_split = result.split(b".")  # type: ignore
     while times < 2:
         if len(res_split[times]) % 4 != 0:
             return True, ""
@@ -108,7 +104,7 @@ def is_filter_result(result: AnyStr, filters: List[AnyStr], flags: int):
     if not filters:
         return False, ""
     for fil in filters:
-        if re.search(fil, result, flags):
+        if re.search(fil, result, flags):  # type: ignore
             return True, ""
     return False, ""
 
@@ -118,8 +114,9 @@ def search_content(
     file_object: Union[pathlib.Path, bytes],
     rules: Dict[str, List[str]],
     split: bytes = b"[\x00-\x1f\x7f]+",
-    re_filter: str = r"",
+    re_filter_content: bytes = rb"",
     is_re_all: bool = False,
+    is_silent: bool = False,
 ) -> List[Dict[str, str]]:
     """扫描单个文件对象的内容并返回命中结果列表。
 
@@ -127,7 +124,7 @@ def search_content(
     - file_object: `Path` 或 bytes；Path 时按控制字符切分字节行；
     - rules: 规则字典，值可以是字符串列表或带 flags/re_filters/regexp 的字典；
     - split: 行分割正则（bytes）；
-    - re_filter: 跳过匹配过滤，碰到指定字符直接跳过匹配；
+    - re_filter_content: 跳过匹配过滤，碰到指定字符直接跳过匹配；
     - is_re_all: 命中一条是否继续匹配该文件的其它规则。
 
     返回:
@@ -140,21 +137,23 @@ def search_content(
 
     # 创建文件行扫描进度条
     file_name = str(file_object) if isinstance(file_object, pathlib.Path) else "bytes"
-    progress_bar = tqdm.tqdm(
-        enumerate(row_contents, start=1),
-        total=len(row_contents),
-        desc=f"file: {file_name.split('/')[-1][:16]}..",
-        leave=False,  # 不保留进度条，避免与主进度条冲突
-        ncols=100,
-        bar_format="{desc}:{percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]",
-    )
+    result_gen = enumerate(row_contents, start=1)
+    if is_silent:
+        result_gen = tqdm.tqdm(
+            enumerate(row_contents, start=1),
+            total=len(row_contents),
+            desc=f"file: {file_name.split('/')[-1][:16]}..",
+            leave=False,  # 不保留进度条，避免与主进度条冲突
+            ncols=100,
+            bar_format="{desc}:{percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]",
+        )
 
-    for index, row_one in progress_bar:
+    for index, row_one in result_gen:
         # 按控制字符进行分割行
         if len(row_one) < 12:
             # 单行内容少于8个字符，丢掉
             continue
-        if re_filter and re.search(re_filter, row_one):
+        if re_filter_content and re.search(re_filter_content, row_one):
             continue
         for rule_name in rules:
             rule = rules[rule_name]
@@ -162,12 +161,12 @@ def search_content(
             filters = None
             if isinstance(rule, Dict):
                 if "flags" in rule:
-                    flags = string_to_reg_flags(rule["flags"])
+                    flags = string_to_reg_flags(rule["flags"])  # type: ignore
                 if "re_filters" in rule:
-                    filters = rule["re_filters"]
-                rule = rule["regexp"]
+                    filters = rule["re_filters"]  # type: ignore
+                rule = rule["regexp"]  # type: ignore
             for regexp in rule:
-                r_result = re.search(regexp, row_one, flags)
+                r_result = re.search(regexp, row_one, flags)  # type: ignore
                 if not r_result:
                     continue
                 try:
@@ -175,7 +174,7 @@ def search_content(
                     result_text = result_byte.decode("utf-8")
                 except UnicodeDecodeError:
                     continue
-                is_filter, extend = is_filter_result(result_byte, filters, flags)
+                is_filter, extend = is_filter_result(result_byte, filters, flags)  # type: ignore
                 if rule_name == "BASE64":
                     is_filter, extend = is_filter_base64(result_byte)
                 if rule_name == "JSON WEB TOKEN(JWT)":
@@ -187,17 +186,19 @@ def search_content(
                     {
                         "file": f"{file_object.__str__()}:{index}",
                         "group": rule_name,
-                        "regexp": regexp.decode("utf-8"),
+                        "regexp": regexp.decode("utf-8"),  # type: ignore
                         "match": result_text,
                         "extend": extend,
                     }
                 )
                 if not is_re_all:
                     # 如果关闭了匹配所有正则组数据且已发现有用数据，则退出循环
-                    progress_bar.close()  # 关闭进度条
+                    if hasattr(result_gen, 'close'):
+                        result_gen.close()  # type: ignore # 关闭进度条
                     return ret
 
-    progress_bar.close()  # 关闭进度条
+    if hasattr(result_gen, 'close'):
+        result_gen.close()  # type: ignore # 关闭进度条
     return ret
 
 
@@ -236,9 +237,9 @@ def gen_file_list(src_path: str, exclude_files: List[str]) -> List[pathlib.Path]
 
 def run():
     """主流程：构建任务队列、并发扫描、汇总去重并输出结果。"""
-    pool = process.ProcessPoolHelper(max_workers=cfg.get("process_number"))
+    pool = process.ProcessPoolHelper(max_workers=CFG.get("process_number"))
     print("[*] file loading...")
-    filelist = gen_file_list(cfg.get("target_path"), cfg.get("exclude_files"))
+    filelist = gen_file_list(CFG.get("target_path"), CFG.get("exclude_files"))  # type: ignore
     if not filelist:
         print("[!] the file path is empty. please check whether the path is correct.\n")
         return
@@ -246,20 +247,21 @@ def run():
     ret = []
     result_filter_list = []
     print(f"[*] found {len(filelist)} files.")
-    groups = cfg.get("rules")
+    groups = CFG.get("rules")
     for filepath in filelist:
         pool.submit_super(
             search_content,
             filepath,
             groups,
-            cfg.get("row_split"),
-            cfg.get("re_filter"),
-            cfg.get("is_re_all"),
+            CFG.get("row_split"),
+            CFG.get("re_filter_content"),
+            CFG.get("is_re_all"),
+            CFG.get("is_silent"),
         )
 
     print("[*] analyzing...\n")
     result_gen = pool.result_yield()
-    if cfg.get("is_silent"):
+    if CFG.get("is_silent"):
         result_gen = tqdm.tqdm(
             pool.result_yield(),
             total=len(filelist),
@@ -277,13 +279,9 @@ def run():
                 continue
             result_filter_list.append([result["file"], result["match"]])
             ret.append(result)
-            if not cfg.get("is_silent"):
-                print(
-                    "[+] group: {}, match: {}, file: {}".format(
-                        result["group"], result["match"], result["file"]
-                    )
-                )
-    output_format = cfg.get("output_format")
+            if not CFG.get("is_silent"):
+                print("[+] group: {}, match: {}, file: {}".format(result["group"], result["match"], result["file"]))
+    output_format = CFG.get("output_format")
     filename = "results_{}.csv".format(time.strftime("%H%M%S", time.localtime()))
     if output_format == "json":
         filename = "results.json"
@@ -297,9 +295,7 @@ def run():
     return ret
 
 
-def to_csv(
-    data: Union[Dict[str, Any], List[Dict[str, Any]]], filename: str = "output.csv"
-):
+def to_csv(data: Union[Dict[str, Any], List[Dict[str, Any]]], filename: str = "output.csv"):
     """将结果列表输出为 CSV 文件。"""
     dataframe = pandas.DataFrame(data)
     dataframe.to_csv(filename, quoting=csv.QUOTE_MINIMAL)
@@ -311,12 +307,40 @@ FUZZY_UNIVERSAL_STRING = r'["\'`]?\s*[=:(\{\[]\s*["\'`][\x20-\x7F]{,128}?[\'"`]'
 PATH_COMMON_STRING = r"users?|windows?|program files(\(x\d{2,3}\))?|s?bin|etc|usr|boot|dev|home|proc|opt|sys|srv|var"
 
 __DEFAULT_CONFIG = {
-    "target_path": "",
-    "config_path": "config.yaml",
-    "output_format": "csv",
-    "process_number": 12,
-    "exclude_files": [r"\.DS_Store"],
-    "re_filter": "",
+    "target_path": {
+        "__help": "search for file paths or folder paths for sensitive cache (eg. ~/download/folder).",
+    },
+    "process_number": {
+        "__type": int,
+        '__default': 12,
+        '__help': "number of program processes (default: 12).",
+    },
+    "config_path": {
+        "__default": "config.yaml",
+        '__help': "path to the yaml configuration file (default: configs.yaml).",
+    },
+    "output_format": {
+        "__default": "csv",
+        '__help': "output file format, available formats json, csv (default: csv).",
+    },
+    "exclude_files": {
+        "__default": [r"\.DS_Store"],
+        "__nargs": "+",
+        '__help': "excluded files, using regular matching (eg. \\.DS_Store .*bin .*doc).",
+    },
+    "is_re_all": {
+        "__flags": ['-a', '--is-re-all'],
+        "__action": "store_true",
+        '__help': "hit a single regular expression per file or match all regular expressions to exit the match loop.",
+    },
+    "is_silent": {
+        "__flags": ['-s', '--is-silent'],
+        "__action": "store_true",
+        '__help': "silent mode: when turned on, no hit data will be output on the console. use a progress bar instead.",
+    },
+    "re_filter_content": {
+        '__help': "filter regular expression. if a regular expression is hit during the string matching process of each line, skip the matching of that line directly",
+    },
     "row_split": "[\x00-\x1f\x7f]+",
     "rules": {
         "AKSK": [
@@ -343,9 +367,7 @@ __DEFAULT_CONFIG = {
             r"[\s\n\'\"`=:#]CI[A-Za-z0-9]{10,40}[\s\n\'\"`=:#]",
             r"[\s\n\'\"`=:#]gcore[A-Za-z0-9]{10,30}[\s\n\'\"`=:#]",
         ],
-        "JSON WEB TOKEN(JWT)": [
-            r"ey[0-9a-zA-Z/+]{4,}={,2}\.[0-9a-zA-Z/+]{6,}={,2}\.[A-Za-z0-9-_]+"
-        ],
+        "JSON WEB TOKEN(JWT)": [r"ey[0-9a-zA-Z/+]{4,}={,2}\.[0-9a-zA-Z/+]{6,}={,2}\.[A-Za-z0-9-_]+"],
         "FUZZY MATCH": {
             "flags": "I",
             "regexp": [
@@ -358,9 +380,7 @@ __DEFAULT_CONFIG = {
         },
         "BASE64": [r"[0-9a-zA-Z/+]{8,}={,2}"],
         "URL": {
-            "regexp": [
-                r"(ftp|https?):\/\/[%.\w\-]+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?"
-            ],
+            "regexp": [r"(ftp|https?):\/\/[%.\w\-]+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?"],
             "re_filters": [
                 r"(adobe|amap|android|apache|bing|digicert|eclipse|freecodecamp|github|githubusercontent|gnu|godaddy|google|googlesource|youtube|youtu|jd"
                 r"|npmjs|microsoft|openxmlformats|outlook|mozilla|openssl|oracle|qq|spring|sun|umang|w3|wikipedia|xml)\.("
@@ -368,9 +388,7 @@ __DEFAULT_CONFIG = {
                 r"(ali|baidu|cdn|example|ssh|ssl)[\w-]*\.(org|com|cn|net|edu|io)",
             ],
         },
-        "EMAIL": [
-            r"[a-zA-Z0-9][-+.\w]{1,127}@([a-zA-Z0-9][-a-zA-Z0-9]{0,63}.){,3}(org|com|cn|net|edu|mail)"
-        ],
+        "EMAIL": [r"[a-zA-Z0-9][-+.\w]{1,127}@([a-zA-Z0-9][-a-zA-Z0-9]{0,63}.){,3}(org|com|cn|net|edu|mail)"],
         "PHONE": [r"(13[0-9]|14[5-9]|15[0-3,5-9]|16[6]|17[0-8]|18[0-9]|19[8,9])\d{8}"],
         "FILE PATH": {
             "flags": "I|X",
@@ -386,88 +404,31 @@ __DEFAULT_CONFIG = {
             ],
         },
     },
-    "is_re_all": False,
-    "is_silent": False,
 }
-cfg = {}
+
+CFG = configurator.CliConfigurator({})
 
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(
+    CFG = configurator.new(
+        configurator.CliConfigurator,
+        template=__DEFAULT_CONFIG,
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
     ███████╗███████╗███╗   ██╗███████╗██╗████████╗██╗██╗   ██╗███████╗
     ██╔════╝██╔════╝████╗  ██║██╔════╝██║╚══██╔══╝██║██║   ██║██╔════╝
-    ███████╗█████╗  ██╔██╗ ██║███████╗██║   ██║   ██║██║   ██║█████╗  
-    ╚════██║██╔══╝  ██║╚██╗██║╚════██║██║   ██║   ██║╚██╗ ██╔╝██╔══╝  
+    ███████╗█████╗  ██╔██╗ ██║███████╗██║   ██║   ██║██║   ██║█████╗
+    ╚════██║██╔══╝  ██║╚██╗██║╚════██║██║   ██║   ██║╚██╗ ██╔╝██╔══╝
     ███████║███████╗██║ ╚████║███████║██║   ██║   ██║ ╚████╔╝ ███████╗
     ╚══════╝╚══════╝╚═╝  ╚═══╝╚══════╝╚═╝   ╚═╝   ╚═╝  ╚═══╝  ╚══════╝
-    v0.1.5
+    v0.1.6
     by 0xn0ne, https://github.com/0xn0ne/sensitive-helper
 """,
     )
-    parser.add_argument(
-        "-t",
-        "--target-path",
-        help="search for file paths or folder paths for sensitive cache (eg. ~/download/folder).",
-    )
-    parser.add_argument(
-        "-p",
-        "--process-number",
-        default=12,
-        type=int,
-        help="number of program processes (default: 12).",
-    )
-    parser.add_argument(
-        "-c",
-        "--config-path",
-        default="configs.yaml",
-        help="path to the yaml configuration file (default: configs.yaml).",
-    )
-    parser.add_argument(
-        "-o",
-        "--output-format",
-        help="output file format, available formats json, csv (default: csv).",
-    )
-    parser.add_argument(
-        "-e",
-        "--exclude-files",
-        nargs="+",
-        help="excluded files, using regular matching (eg. \\.DS_Store .*bin .*doc).",
-    )
-    parser.add_argument(
-        "-a",
-        "--is-re-all",
-        action="store_true",
-        help="hit a single regular expression per file or match all regular expressions to exit the match loop.",
-    )
-    parser.add_argument(
-        "-s",
-        "--is-silent",
-        action="store_true",
-        help="silent mode: when turned on, no hit data will be output on the console. use a progress bar instead.",
-    )
-    parser.add_argument(
-        "-f",
-        "--re-filter",
-        help="filter regular expression. if a regular expression is hit during the string matching process of each line, skip the matching of that line directly",
-    )
-    args = parser.parse_args()
-
-    print(parser.description)
-
-    nargs = dict(args.__dict__)
-    for key in args.__dict__:
-        if nargs[key] is None:
-            del nargs[key]
-
-    cfg = configurator.new(filepath=args.config_path, template=__DEFAULT_CONFIG)
-    # cfg.save()
-    cfg.raw.update(nargs)
-    print("[*] config:", cfg.gen_pretty(depth=2, filters=["rules"]))
-
-    rules = cfg.get("rules")
+    CFG.parse_args('config_path')  # type: ignore
+    print("[*] config:", CFG.gen_detail(depth=2, filters=["rules"]))
+    rules = CFG.get("rules")
     for rule in rules.values():
         if isinstance(rule, Dict):
             if "re_filters" in rule:
@@ -476,7 +437,6 @@ if __name__ == "__main__":
             rule = rule["regexp"]
         for index, value in enumerate(rule):
             rule[index] = value.encode()
-    cfg.raw["row_split"] = cfg.raw["row_split"].encode()
-    cfg.raw["re_filter"] = cfg.raw["re_filter"].encode()
-
+    CFG.raw["row_split"] = CFG.raw["row_split"].encode()
+    CFG.raw["re_filter_content"] = CFG.raw["re_filter_content"].encode()
     run()

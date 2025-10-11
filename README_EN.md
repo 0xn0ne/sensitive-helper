@@ -56,32 +56,33 @@ By default, when the program matches using regular expressions, it will quit sea
 
 ```bash
 % python3 sensitive-helper.py -h                                                    
-usage: sensitive-helper.py [-h] -t TARGET_PATH [-p PROCESS_NUMBER] [-c CONFIG] [-o OUTPUT] [-e EXCLUDE_FILES [EXCLUDE_FILES ...]] [-a]
+usage: sensitive-helper.py [-h] [-t TARGET_PATH] [-p PROCESS_NUMBER] [-c CONFIG_PATH] [-o OUTPUT_FORMAT] [-e EXCLUDE_FILES [EXCLUDE_FILES ...]] [-a] [-s] [-r RE_FILTER_CONTENT]
 
     ███████╗███████╗███╗   ██╗███████╗██╗████████╗██╗██╗   ██╗███████╗
     ██╔════╝██╔════╝████╗  ██║██╔════╝██║╚══██╔══╝██║██║   ██║██╔════╝
-    ███████╗█████╗  ██╔██╗ ██║███████╗██║   ██║   ██║██║   ██║█████╗  
-    ╚════██║██╔══╝  ██║╚██╗██║╚════██║██║   ██║   ██║╚██╗ ██╔╝██╔══╝  
+    ███████╗█████╗  ██╔██╗ ██║███████╗██║   ██║   ██║██║   ██║█████╗
+    ╚════██║██╔══╝  ██║╚██╗██║╚════██║██║   ██║   ██║╚██╗ ██╔╝██╔══╝
     ███████║███████╗██║ ╚████║███████║██║   ██║   ██║ ╚████╔╝ ███████╗
     ╚══════╝╚══════╝╚═╝  ╚═══╝╚══════╝╚═╝   ╚═╝   ╚═╝  ╚═══╝  ╚══════╝
-    v0.1.3
+    v0.1.6
     by 0xn0ne, https://github.com/0xn0ne/sensitive-helper
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
-  -t TARGET_PATH, --target-path TARGET_PATH
+  -t, --target-path TARGET_PATH
                         search for file paths or folder paths for sensitive cache (eg. ~/download/folder).
-  -p PROCESS_NUMBER, --process-number PROCESS_NUMBER
+  -p, --process-number PROCESS_NUMBER
                         number of program processes (default: 12).
-  -c CONFIG_PATH, --config-path CONFIG_PATH
+  -c, --config-path CONFIG_PATH
                         path to the yaml configuration file (default: configs.yaml).
-  -o OUTPUT_FORMAT, --output-format OUTPUT_FORMAT
+  -o, --output-format OUTPUT_FORMAT
                         output file format, available formats json, csv (default: csv).
-  -e EXCLUDE_FILES [EXCLUDE_FILES ...], --exclude-files EXCLUDE_FILES [EXCLUDE_FILES ...]
+  -e, --exclude-files EXCLUDE_FILES [EXCLUDE_FILES ...]
                         excluded files, using regular matching (eg. \.DS_Store .*bin .*doc).
   -a, --is-re-all       hit a single regular expression per file or match all regular expressions to exit the match loop.
   -s, --is-silent       silent mode: when turned on, no hit data will be output on the console. use a progress bar instead.
-  -f, --re-filter       filter regular expression. if a regular expression is hit during the string matching process of each line, skip the matching of that line directly
+  -r, --re-filter-content RE_FILTER_CONTENT
+                        filter regular expression. if a regular expression is hit during the string matching process of each line, skip the matching of that line directly
 ```
 
 ### Cybersecurity Emergency Examples
